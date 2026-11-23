@@ -1,7 +1,6 @@
 """GitHub Copilot in VS Code / VS Code Insiders. Ported from the owner's copilot_chats_to_md.py."""
 
 import math
-import os
 import re
 from collections import defaultdict
 from pathlib import Path
@@ -12,7 +11,7 @@ from yardmaster.paths import vscode_user_dirs
 from yardmaster.safe_io import MAX_FILE, iter_jsonl, load_json
 from yardmaster.timeutil import parse_ts
 
-from . import COLLECTORS, CollectorContext, mtime_utc
+from . import COLLECTORS, CollectorContext, in_project, mtime_utc
 
 
 def _is_num(v: object) -> bool:
@@ -117,12 +116,6 @@ def _turns(ts, r: dict) -> list[Turn]:
     return out
 
 
-def _in_project(workspace: str, project: Path) -> bool:
-    norm = lambda s: os.path.normcase(os.path.normpath(str(s)))  # noqa: E731
-    w, p = norm(workspace), norm(project)
-    return w == p or w.startswith(p + os.sep)
-
-
 def collect(ctx: CollectorContext) -> list[Chat]:
     user_dirs = [Path(r) for r in ctx.roots] if ctx.roots else vscode_user_dirs(ctx.env, ctx.platform)
     chats: list[Chat] = []
@@ -157,7 +150,7 @@ def collect(ctx: CollectorContext) -> list[Chat]:
             if not in_range:
                 continue
             workspace = (_workspace_path(ws) or ws.name) if ws else "<no folder>"
-            if ctx.project is not None and not _in_project(workspace, ctx.project):
+            if ctx.project is not None and not in_project(workspace, ctx.project):
                 continue
 
             credits, missing, per_model = 0.0, 0, defaultdict(float)

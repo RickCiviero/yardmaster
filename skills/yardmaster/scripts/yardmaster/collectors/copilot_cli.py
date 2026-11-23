@@ -8,8 +8,7 @@ from yardmaster.model import Chat, Turn
 from yardmaster.safe_io import MAX_FILE, iter_jsonl, read_text
 from yardmaster.timeutil import parse_ts
 
-from . import COLLECTORS, CollectorContext, mtime_utc
-from .vscode_copilot import _in_project
+from . import COLLECTORS, CollectorContext, in_project, mtime_utc
 
 NANO_PER_CREDIT = 1e9
 
@@ -97,7 +96,7 @@ def collect(ctx: CollectorContext) -> list[Chat]:
         is_dir = ev.name == "events.jsonl"
         ws_yaml = ev.parent / "workspace.yaml" if is_dir else None
         cwd = _yaml_field(ws_yaml, "cwd") if ws_yaml and ws_yaml.exists() else ""
-        if ctx.project is not None and not (cwd and _in_project(cwd, ctx.project)):
+        if ctx.project is not None and not (cwd and in_project(cwd, ctx.project)):
             continue
         chats.append(
             Chat(
