@@ -1,5 +1,6 @@
 """History collectors, one per harness. Each is read-only and returns normalised Chat records."""
 
+import math
 import os
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
@@ -30,10 +31,16 @@ def mtime_utc(p: Path) -> datetime:
         return datetime.min.replace(tzinfo=UTC)
 
 
+def nat(v: object) -> int:
+    """A token count from untrusted JSON: a finite number in 0..1e9, else 0."""
+    ok = isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) and 0 <= v <= 10**9
+    return int(v) if ok else 0
+
+
 def in_project(workspace: str, project: Path) -> bool:
     norm = lambda s: os.path.normcase(os.path.normpath(str(s)))  # noqa: E731
     w, p = norm(workspace), norm(project)
     return w == p or w.startswith(p + os.sep)
 
 
-from . import claude_code, copilot_cli, vscode_copilot  # noqa: E402,F401  (each registers itself in COLLECTORS)
+from . import claude_code, codex, copilot_cli, vscode_copilot  # noqa: E402,F401  (each registers itself in COLLECTORS)

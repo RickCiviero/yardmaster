@@ -5,7 +5,6 @@ so usage is taken once per message id (the max seen), never summed across lines.
 """
 
 import json
-import math
 from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
@@ -14,14 +13,9 @@ from yardmaster.model import Chat, Turn
 from yardmaster.safe_io import MAX_FILE, iter_jsonl
 from yardmaster.timeutil import parse_ts
 
-from . import COLLECTORS, CollectorContext, in_project, mtime_utc
+from . import COLLECTORS, CollectorContext, in_project, mtime_utc, nat
 
 _MIN = datetime.min.replace(tzinfo=UTC)
-
-
-def _nat(v: object) -> int:
-    ok = isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) and 0 <= v <= 10**9
-    return int(v) if ok else 0
 
 
 def _blocks(content) -> list[dict]:
@@ -97,8 +91,8 @@ def _session(ctx: CollectorContext, sid: str, files: list[Path]) -> Chat | None:
             if not isinstance(model, str) or model.startswith("<"):  # "<synthetic>" = client-side error stub
                 continue
             usage = msg.get("usage") if isinstance(msg.get("usage"), dict) else {}
-            tin = _nat(usage.get("input_tokens")) + _nat(usage.get("cache_creation_input_tokens"))
-            tout, tcache = _nat(usage.get("output_tokens")), _nat(usage.get("cache_read_input_tokens"))
+            tin = nat(usage.get("input_tokens")) + nat(usage.get("cache_creation_input_tokens"))
+            tout, tcache = nat(usage.get("output_tokens")), nat(usage.get("cache_read_input_tokens"))
             mid = msg["id"] if isinstance(msg.get("id"), str) else f"line-{n}"
             texts = []
             for b in _blocks(msg.get("content")):
