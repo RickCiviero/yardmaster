@@ -1,4 +1,5 @@
 import socket
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -32,6 +33,11 @@ def home(tmp_path, monkeypatch):
         p = h / sub if sub else h
         p.mkdir(parents=True, exist_ok=True)
         monkeypatch.setenv(k, str(p))
+    tmp = h / "AppData" / "Local" / "Temp"
+    tmp.mkdir(parents=True, exist_ok=True)
+    for k in ("TMP", "TEMP", "TMPDIR"):
+        monkeypatch.setenv(k, str(tmp))
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp))
     return h
 
 
