@@ -10,7 +10,7 @@ license = { text = "MIT" }
 dev = ["pytest", "hypothesis", "pyyaml", "tzdata", "ruff", "bandit", "pip-audit", "cyclonedx-bom"]
 
 [tool.pytest.ini_options]
-pythonpath = ["skills/yardmaster/scripts"]
+pythonpath = ["skills/yardmaster/scripts", "tools"]
 testpaths = ["tests"]
 markers = ["pentest: penetration-test cases", "fuzz: property-based fuzzing"]
 
