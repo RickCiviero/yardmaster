@@ -15,7 +15,8 @@ from .collectors import COLLECTORS, CollectorContext, in_project
 from .detect import detect_harness
 from .ledger import ledger, render_ledger
 from .pricing import Pricing, load_pricing
-from .safe_io import make_private_dir, read_text
+from .safe_io import load_json, make_private_dir, read_text
+from .schema import ValidationError, load_manifest_ids, validate_plan, validate_verdicts
 from .settings import load_settings
 from .timeutil import resolve_range, to_utc_bounds
 
@@ -52,6 +53,10 @@ def _build_parser() -> argparse.ArgumentParser:
     pv.add_argument("n", type=int)
     sub.add_parser("clean", help="delete the survey directory")
     sub.add_parser("ledger", parents=[_common()], help="spend per harness and model (no model call)")
+    v = sub.add_parser("validate", help="schema-check the model's verdicts.json or plan.json")
+    v.add_argument("kind", choices=["verdicts", "plan"])
+    v.add_argument("file")
+    v.add_argument("--manifest", help="manifest.json of the survey (default: the current survey)")
     return ap
 
 
@@ -204,7 +209,33 @@ def _cmd_ledger(args) -> int:
     return 0
 
 
-COMMANDS = {"survey": _cmd_survey, "preview": _cmd_preview, "clean": _cmd_clean, "ledger": _cmd_ledger}
+def _cmd_validate(args) -> int:
+    doc = load_json(Path(args.file))
+    if doc is None:
+        print(f"error: cannot read {args.file} as JSON")
+        return 2
+    pricing = _pricing()
+    try:
+        if args.kind == "plan":
+            plan = validate_plan(doc, pricing=pricing)
+            print(f"OK: plan with {len(plan.groups)} groups")
+            return 0
+        d = _survey_dir()
+        manifest = Path(args.manifest) if args.manifest else (d / "manifest.json" if d else None)
+        m = load_json(manifest) if manifest else None
+        if not isinstance(m, dict):
+            print("error: no manifest; run `survey` first or pass --manifest")
+            return 2
+        verdicts = validate_verdicts(doc, manifest_ids=load_manifest_ids(m), pricing=pricing)
+        print(f"OK: {len(verdicts)} verdicts")
+        return 0
+    except ValidationError as e:  # message holds a JSON pointer and a reason, never the offending value
+        print(f"INVALID at {e}")
+        return 1
+
+
+COMMANDS = {"survey": _cmd_survey, "preview": _cmd_preview, "clean": _cmd_clean, "ledger": _cmd_ledger,
+            "validate": _cmd_validate}
 
 
 def main(argv: list[str] | None = None) -> int:
