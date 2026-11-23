@@ -24,3 +24,7 @@ exclude_dirs = ["tests", "reference"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"skills/yardmaster/scripts/yardmaster/redact.py" = ["E501"]  # regex tables read better unwrapped
+"tests/secrets_corpus.py" = ["E501"]
