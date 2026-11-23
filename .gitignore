@@ -5,3 +5,5 @@ __pycache__/
 *.md.tmp
 /20*.md
 docs/superpowers/plans/
+.superpowers/
+.venv/
