@@ -87,3 +87,37 @@ def vscode_user(root: Path) -> Path:
         {"kind": 0, "v": {"requests": [_vs_req(ms(2026, 9, 10), "gpt-5", 3.0, "q", "a")]}}])
     touch_old(e)
     return u
+
+
+def _cli_events(user_ts: list[str], shutdown: tuple[str, float, str] | None, models=("gpt-5",)):
+    rows = [{"type": "session.start", "timestamp": user_ts[0], "data": {}}]
+    for i, t in enumerate(user_ts):
+        rows.append({"type": "user.message", "timestamp": t, "data": {"content": f"cli question {i}"}})
+        rows.append({"type": "assistant.message", "timestamp": t, "data": {"content": f"cli answer {i}",
+                                                                          "model": models[0]}})
+    if shutdown:
+        ts, nano, status = shutdown
+        rows.append({"type": "session.shutdown", "timestamp": ts, "data": {
+            "accountingSnapshot": {"totalNanoAiu": nano, "aiCreditsStatus": status},
+            "modelMetrics": {m: {"requests": 1} for m in models}}})
+    return rows
+
+
+def copilot_home(root: Path) -> Path:
+    h = root / ".copilot"
+    ss = h / "session-state"
+
+    def session(name, rows, cwd="C:\ws\app"):
+        jsonl(ss / name / "events.jsonl", rows)
+        (ss / name / "workspace.yaml").write_text(f"id: {name}\ncwd: '{cwd}'\n")
+
+    session("cliOk", _cli_events([iso(2026, 9, 10), iso(2026, 9, 10, 11)], (iso(2026, 9, 10, 12), 2.5e9, "complete")))
+    session("cliLate", _cli_events([iso(2026, 9, 21)], (iso(2026, 10, 2), 7e9, "complete")), cwd="C:\ws\other")
+    session("cliNoShutdown", _cli_events([iso(2026, 9, 11)], None))
+    session("cliPartial", _cli_events([iso(2026, 9, 12)], (iso(2026, 9, 12, 12), 1e9, "partial"), models=("gpt-5", "o4")))
+    jsonl(ss / "bare.jsonl", _cli_events([iso(2026, 9, 13)], (iso(2026, 9, 13, 12), 3e9, "complete")))
+    session("cliOutside", _cli_events([iso(2026, 8, 13)], (iso(2026, 8, 13, 12), 9e9, "complete")))
+    stale = ss / "cliStale"
+    jsonl(stale / "events.jsonl", _cli_events([iso(2026, 9, 10)], (iso(2026, 9, 10, 12), 9e9, "complete")))
+    touch_old(stale / "events.jsonl")
+    return h

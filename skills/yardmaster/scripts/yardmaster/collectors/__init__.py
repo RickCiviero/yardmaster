@@ -29,4 +29,4 @@ def mtime_utc(p: Path) -> datetime:
         return datetime.min.replace(tzinfo=UTC)
 
 
-from . import vscode_copilot  # noqa: E402,F401  (registers itself in COLLECTORS)
+from . import copilot_cli, vscode_copilot  # noqa: E402,F401  (each registers itself in COLLECTORS)
