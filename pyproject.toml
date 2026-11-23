@@ -7,7 +7,7 @@ dependencies = []
 license = { text = "MIT" }
 
 [project.optional-dependencies]
-dev = ["pytest", "hypothesis", "pyyaml", "ruff", "bandit", "pip-audit", "cyclonedx-bom"]
+dev = ["pytest", "hypothesis", "pyyaml", "tzdata", "ruff", "bandit", "pip-audit", "cyclonedx-bom"]
 
 [tool.pytest.ini_options]
 pythonpath = ["skills/yardmaster/scripts"]
@@ -21,3 +21,6 @@ extend-exclude = ["reference"]
 
 [tool.bandit]
 exclude_dirs = ["tests", "reference"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
