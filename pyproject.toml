@@ -16,7 +16,7 @@ markers = ["pentest: penetration-test cases", "fuzz: property-based fuzzing"]
 
 [tool.ruff]
 target-version = "py311"
-line-length = 120
+line-length = 150
 extend-exclude = ["reference"]
 
 [tool.bandit]

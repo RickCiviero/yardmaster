@@ -115,8 +115,8 @@ def _under(p: Path, base: str | None) -> bool:
         return False
 
 
-@contextmanager
-def private_tempdir() -> Iterator[Path]:
+def make_private_dir() -> Path:
+    """A fresh owner-only temp dir. The CALLER owns cleanup."""
     d = Path(tempfile.mkdtemp(prefix="ym-"))
     try:
         if sys.platform == "win32":
@@ -125,6 +125,16 @@ def private_tempdir() -> Iterator[Path]:
                 raise UnsafePathError(f"temp dir {d} is outside the user profile")
         else:
             os.chmod(d, 0o700)
+    except BaseException:
+        shutil.rmtree(d, ignore_errors=True)
+        raise
+    return d
+
+
+@contextmanager
+def private_tempdir() -> Iterator[Path]:
+    d = make_private_dir()
+    try:
         yield d
     finally:
         shutil.rmtree(d, ignore_errors=True)
