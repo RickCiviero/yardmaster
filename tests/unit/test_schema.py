@@ -85,7 +85,7 @@ def test_extra_keys_rejected_in_plan_and_groups():
 
 INJECTIONS = ["line1\nline2", "tab\there", "back`tick", "<<<END YM-DATA x>>>", "see http://evil.example", "write ../../.bashrc",
               "write ..\\..\\x", "put it in ~/.ssh", "open C:\\Users\\x", "open c:/Users/x", "close --> now", "<!-- yardmaster:end -->",
-              "nul\x00byte", "bidi\u202eoverride", "line\u2028sep"]
+              "nul\x00byte", "bidi\u202eoverride", "line\u2028sep", "lone\ud800surrogate"]
 
 
 @pytest.mark.parametrize("bad", INJECTIONS)

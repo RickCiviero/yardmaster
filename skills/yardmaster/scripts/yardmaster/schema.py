@@ -43,7 +43,7 @@ def _text(v: object, path: str, *, max_chars: int, max_words: int | None = None,
         raise ValidationError(f"must be 1..{max_chars} characters", path)
     if max_words is not None and len(v.split()) > max_words:
         raise ValidationError(f"must be at most {max_words} words", path)
-    if any(unicodedata.category(c) in ("Cc", "Cf", "Zl", "Zp") for c in v):
+    if any(unicodedata.category(c) in ("Cc", "Cf", "Zl", "Zp", "Cs") for c in v):
         raise ValidationError("contains control or invisible characters", path)
     if any(b in v for b in _BANNED) or _DRIVE.search(v):
         raise ValidationError("contains a forbidden sequence (markup, URL or path)", path)
