@@ -1,0 +1,268 @@
+{
+  "schema": 1,
+  "as_of": "2026-11-23",
+  "verified": false,
+  "note": "Prices and credit multipliers are ESTIMATES (4.5-generation list prices and relative ratios). Verify every row against the vendor pricing pages and set verified=true before a release (docs/wiki/Pricing.md).",
+  "harnesses": {
+    "vscode-copilot": {
+      "unit": "credit",
+      "models": [
+        {
+          "id": "gpt-6-luna",
+          "aliases": [],
+          "tier": "light",
+          "multiplier": 0.25,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        },
+        {
+          "id": "haiku",
+          "aliases": [
+            "claude-haiku-5-5",
+            "claude-haiku-4.5",
+            "claude-haiku-4-5"
+          ],
+          "tier": "light",
+          "multiplier": 0.33,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        },
+        {
+          "id": "sonnet",
+          "aliases": [
+            "claude-sonnet-5-5",
+            "claude-sonnet-4.5",
+            "claude-sonnet-4-5"
+          ],
+          "tier": "standard",
+          "multiplier": 1.0,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        },
+        {
+          "id": "gpt-5",
+          "aliases": [],
+          "tier": "standard",
+          "multiplier": 1.0,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        },
+        {
+          "id": "opus",
+          "aliases": [
+            "claude-opus-5-5",
+            "claude-opus-4.5",
+            "claude-opus-4-5"
+          ],
+          "tier": "heavy",
+          "multiplier": 3.0,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        },
+        {
+          "id": "fable",
+          "aliases": [
+            "claude-fable-5-1"
+          ],
+          "tier": "frontier",
+          "multiplier": 10.0,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        }
+      ]
+    },
+    "copilot-cli": {
+      "unit": "credit",
+      "models": [
+        {
+          "id": "gpt-6-luna",
+          "aliases": [],
+          "tier": "light",
+          "multiplier": 0.25,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        },
+        {
+          "id": "haiku",
+          "aliases": [
+            "claude-haiku-5-5",
+            "claude-haiku-4.5",
+            "claude-haiku-4-5"
+          ],
+          "tier": "light",
+          "multiplier": 0.33,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        },
+        {
+          "id": "sonnet",
+          "aliases": [
+            "claude-sonnet-5-5",
+            "claude-sonnet-4.5",
+            "claude-sonnet-4-5"
+          ],
+          "tier": "standard",
+          "multiplier": 1.0,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        },
+        {
+          "id": "gpt-5",
+          "aliases": [],
+          "tier": "standard",
+          "multiplier": 1.0,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        },
+        {
+          "id": "opus",
+          "aliases": [
+            "claude-opus-5-5",
+            "claude-opus-4.5",
+            "claude-opus-4-5"
+          ],
+          "tier": "heavy",
+          "multiplier": 3.0,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        },
+        {
+          "id": "fable",
+          "aliases": [
+            "claude-fable-5-1"
+          ],
+          "tier": "frontier",
+          "multiplier": 10.0,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        }
+      ]
+    },
+    "claude-code": {
+      "unit": "usd_per_mtok",
+      "models": [
+        {
+          "id": "haiku",
+          "aliases": [
+            "claude-haiku-5-5"
+          ],
+          "tier": "light",
+          "input": 1.0,
+          "output": 5.0,
+          "cached": 0.1,
+          "multiplier": null,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        },
+        {
+          "id": "sonnet",
+          "aliases": [
+            "claude-sonnet-5-5"
+          ],
+          "tier": "standard",
+          "input": 3.0,
+          "output": 15.0,
+          "cached": 0.3,
+          "multiplier": null,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        },
+        {
+          "id": "opus",
+          "aliases": [
+            "claude-opus-5-5"
+          ],
+          "tier": "heavy",
+          "input": 5.0,
+          "output": 25.0,
+          "cached": 0.5,
+          "multiplier": null,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        },
+        {
+          "id": "claude-fable-5-1",
+          "aliases": [
+            "fable"
+          ],
+          "tier": "frontier",
+          "input": 15.0,
+          "output": 75.0,
+          "cached": 1.5,
+          "multiplier": null,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        }
+      ]
+    },
+    "codex": {
+      "unit": "usd_per_mtok",
+      "models": [
+        {
+          "id": "gpt-5-mini",
+          "aliases": [],
+          "tier": "light",
+          "input": 0.25,
+          "output": 2.0,
+          "cached": 0.025,
+          "multiplier": null,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        },
+        {
+          "id": "gpt-5-codex",
+          "aliases": [],
+          "tier": "standard",
+          "input": 1.25,
+          "output": 10.0,
+          "cached": 0.125,
+          "multiplier": null,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        },
+        {
+          "id": "gpt-5",
+          "aliases": [],
+          "tier": "heavy",
+          "input": 1.25,
+          "output": 10.0,
+          "cached": 0.125,
+          "multiplier": null,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        },
+        {
+          "id": "gpt-5-pro",
+          "aliases": [],
+          "tier": "frontier",
+          "input": 15.0,
+          "output": 120.0,
+          "cached": 1.5,
+          "multiplier": null,
+          "notes": [
+            "estimated: verify against the vendor page before relying on savings"
+          ]
+        }
+      ]
+    }
+  }
+}
