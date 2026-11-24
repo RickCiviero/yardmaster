@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 README = ROOT / "README.md"
 WIKI = ROOT / "docs" / "wiki"
 PAGES = ["Home", "Meet-the-Yardmaster", "Quick-start", "How-it-works", "Supported-harnesses",
-         "Security-and-compliance", "Pricing", "FAQ", "Contributing"]
+         "Security-and-compliance", "Models", "FAQ", "Contributing"]
 LINK = re.compile(r"(?<!!)\[[^\]]*\]\(([^)\s]+)\)|<img[^>]+src=\"([^\"]+)\"")
 
 

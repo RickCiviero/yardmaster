@@ -69,7 +69,7 @@ def test_target_all_covers_every_harness_and_is_reversible(setup, capsys, home):
     assert (proj / ".agents" / "model-router" / "yardmaster.model-router.yml").is_file()
     assert (proj / "AGENTS.md").read_text(encoding="utf-8").count("yardmaster:begin") == 2  # copilot-cli + codex
     codex_profile = next(home.rglob("ym-build-and-fix.config.toml"))
-    assert 'model = "gpt-5"' in codex_profile.read_text(encoding="utf-8")
+    assert 'model = "gpt-6.2-sol"' in codex_profile.read_text(encoding="utf-8")
     assert main(["undo", run_id]) == 0
     assert not (proj / "AGENTS.md").exists() and not (proj / ".agents").exists() and not codex_profile.exists()
 

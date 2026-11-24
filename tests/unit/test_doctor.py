@@ -42,11 +42,11 @@ def test_unverified_formats_are_reported(tmp_path):
         assert rows[f"format:{h}"][0] == "warn" and "not verified" in rows[f"format:{h}"][1]
 
 
-def test_pricing_unverified_and_age(tmp_path):
-    status, detail = _rows({"HOME": str(tmp_path)}, tmp_path)["pricing"]
-    assert status == "warn" and "UNVERIFIED" in detail
+def test_catalog_row_states_its_assumptions_and_age(tmp_path):
+    status, detail = _rows({"HOME": str(tmp_path)}, tmp_path)["catalog"]
+    assert status == "warn" and "tiers are assumptions" in detail and "4 harnesses" in detail
     old = doctor({"HOME": str(tmp_path)}, "linux", today=date(2027, 6, 1), policy=tmp_path / "n", config=tmp_path / "n")
-    assert "days old" in next(d for n, _, d in old if n == "pricing")
+    assert "days old" in next(d for n, _, d in old if n == "catalog")
 
 
 def test_broken_policy_fails_the_settings_check(tmp_path):
@@ -73,6 +73,6 @@ def test_write_targets_checked(tmp_path):
 
 def test_render_and_cli_exit_codes(tmp_path, capsys, monkeypatch):
     text = render_doctor(doctor({"HOME": str(tmp_path)}, "linux", today=TODAY, policy=tmp_path / "n", config=tmp_path / "n"))
-    assert "python" in text and "pricing" in text and "settings" in text
+    assert "python" in text and "catalog" in text and "settings" in text
     assert main(["doctor"]) in (0, 1)
     assert "python" in capsys.readouterr().out

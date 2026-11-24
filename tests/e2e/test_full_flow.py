@@ -8,8 +8,8 @@ from secrets_corpus import SECRETS
 from synthetic import copilot_home, iso, jsonl, ms, vscode_user
 from synthetic_claude import claude_home
 from synthetic_codex import codex_home
+from yardmaster.catalog import default_catalog
 from yardmaster.cli import main
-from yardmaster.pricing import default_pricing
 
 RANGE = ["--from", "2026-09-04", "--to", "2026-09-22"]
 ALL_SECRETS = list(SECRETS.values())
@@ -53,7 +53,7 @@ def _survey(w, capsys):
 
 def _fake_model(w, tmp_path):
     """A deterministic stand-in for the invoking model: valid verdicts and a valid plan from the manifest."""
-    pricing = default_pricing({"HOME": str(w.home)}, "linux")
+    catalog = default_catalog()
     ids = json.loads((w.out / "manifest.json").read_text(encoding="utf-8"))["chat_ids"]
     verdicts = []
     for i, cid in enumerate(ids):
@@ -62,7 +62,7 @@ def _fake_model(w, tmp_path):
         verdicts.append({
             "chat_id": cid, "task_group": "build-and-fix" if tier == "heavy" else "quick-questions",
             "task_summary": "Did some work", "model_used": "opus", "outcome": "ok", "sufficient_tier": tier,
-            "cheapest_sufficient_model": pricing.cheapest(harness, tier, frozenset()).id, "confidence": 0.9, "reason": "Fine",
+            "weakest_sufficient_model": catalog.choose(harness, tier, frozenset()).id, "confidence": 0.9, "reason": "Fine",
         })
     (w.out / "verdicts.json").write_text(json.dumps(verdicts), encoding="utf-8")
     plan = {"version": 1, "description": "Heavy work to a strong model, the rest to a light one.", "groups": [

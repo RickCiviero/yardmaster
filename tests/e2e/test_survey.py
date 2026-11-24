@@ -112,7 +112,7 @@ def test_default_survey_dir_preview_and_clean(trees, capsys):
 def test_ledger_command_needs_no_model(trees, capsys):
     assert main(["ledger", *RANGE, *[a for h, p in trees.items() for a in ("--path", f"{h}={p}")]]) == 0
     out = capsys.readouterr().out
-    assert "vscode-copilot" in out and "claude-code" in out and "$" in out and "plan the migration" not in out
+    assert "vscode-copilot" in out and "claude-code" in out and "Fresh tokens" in out and "plan the migration" not in out
 
 
 def test_second_survey_replaces_the_first_directory(trees, capsys):

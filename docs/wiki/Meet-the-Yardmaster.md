@@ -17,7 +17,7 @@ Yardmaster does that for your AI coding agents.
 | survey | read the yard: collect and redact your chats |
 | manifest | the plan: which kind of work goes to which model |
 | switch, route | write the config |
-| ledger | the spend report |
+| ledger | the usage report: tokens and strength |
 | signal | the approval prompt. Green: a cheaper model is fine. Amber: keep the current one. Red: it needs a stronger model |
 
 The persona lives in the headings, README and wiki. It never appears in the files Yardmaster writes into your projects.

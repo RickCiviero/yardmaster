@@ -103,7 +103,7 @@ Each cited test is checked by `tests/unit/test_docs_links.py`, so a renamed or d
 | ID | Requirement (paraphrased) | Status | Evidence |
 |---|---|---|---|
 | 7.1.1 | Credentials and payment details are not logged | met | `tests/e2e/test_full_flow.py::test_ledger_and_export_never_leak_the_planted_secrets` |
-| 7.1.2 | Other sensitive data is not logged beyond what is required | met | `tests/unit/test_batch.py::test_manifest_has_no_text`, `tests/unit/test_ledger.py::test_total_and_render_has_no_chat_text` |
+| 7.1.2 | Other sensitive data is not logged beyond what is required | met | `tests/unit/test_batch.py::test_manifest_has_no_text`, `tests/unit/test_usage_ledger.py::test_the_report_never_contains_chat_text` |
 | 7.1.3 | Security-relevant events are logged | partial | Rejections, applies and undos are recorded in the run record and exit codes: `tests/unit/test_route.py::test_undo_nothing_to_undo_and_double_undo`. There is no persistent audit log; accepted for a local CLI |
 | 7.1.4 | Each event carries enough information to investigate | partial | The run record holds the run id, targets, hashes and timestamps: `tests/unit/test_route.py::test_apply_writes_exactly_the_previewed_text`. Same gap as 7.1.3 |
 | 7.2.1 | All authentication decisions are logged | N/A | No authentication |

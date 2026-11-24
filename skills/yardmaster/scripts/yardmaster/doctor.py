@@ -6,12 +6,12 @@ from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from pathlib import Path
 
+from .catalog import default_catalog
 from .collectors import CollectorContext
 from .collectors.claude_code import _root as claude_root
 from .collectors.codex import _root as codex_root
 from .collectors.copilot_cli import _home as copilot_home
 from .paths import vscode_user_dirs
-from .pricing import default_pricing
 from .settings import load_settings
 
 Row = tuple[str, str, str]  # (check, ok|warn|fail, detail)
@@ -75,13 +75,13 @@ def doctor(
     except ValueError as e:
         rows.append(("settings", "fail", str(e)))
     try:
-        pr = default_pricing(env, platform)
-        days = (today - date.fromisoformat(pr.as_of)).days
-        status = "ok" if pr.verified and days <= 90 else "warn"
-        label = "verified" if pr.verified else "UNVERIFIED estimates"
-        rows.append(("pricing", status, f"{label}, as of {pr.as_of} ({days} days old)"))
+        cat = default_catalog()
+        n = sum(len(cat.models(h)) for h in cat.harnesses())
+        days = (today - date.fromisoformat(cat.as_of)).days
+        rows.append(("catalog", "warn", f"{n} models in {len(cat.harnesses())} harnesses, as of {cat.as_of} ({days} days old); "
+                                        "tiers are assumptions and the GPT-6 names are not yet confirmed in a live install"))
     except ValueError as e:
-        rows.append(("pricing", "fail", str(e)))
+        rows.append(("catalog", "fail", str(e)))
     return rows
 
 

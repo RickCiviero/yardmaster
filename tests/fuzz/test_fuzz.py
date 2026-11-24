@@ -18,9 +18,9 @@ from synthetic import SINCE, UNTIL, copilot_home, vscode_user
 from synthetic_claude import claude_home
 from synthetic_codex import codex_home
 from yardmaster.blocks import BlockError, markers, replace_block
+from yardmaster.catalog import default_catalog
 from yardmaster.collectors import COLLECTORS, CollectorContext
 from yardmaster.emit import toml_str, yaml_str
-from yardmaster.pricing import default_pricing
 from yardmaster.redact import redact
 from yardmaster.resolve import resolve_plan
 from yardmaster.schema import VERDICT_KEYS, ValidationError, validate_plan, validate_verdicts
@@ -28,7 +28,7 @@ from yardmaster.writers import WRITERS
 
 pytestmark = pytest.mark.fuzz
 FUZZ = settings(max_examples=int(os.environ.get("FUZZ_EXAMPLES", "200")), deadline=None, suppress_health_check=list(HealthCheck))
-PRICING = default_pricing({"HOME": "/nonexistent"}, "linux")
+CATALOG = default_catalog()
 
 scalars = st.none() | st.booleans() | st.integers() | st.floats(allow_nan=True, allow_infinity=True) | st.text(max_size=80)
 json_st = st.recursive(scalars, lambda c: st.lists(c, max_size=4) | st.dictionaries(st.text(max_size=12), c, max_size=6), max_leaves=30)
@@ -38,7 +38,7 @@ json_st = st.recursive(scalars, lambda c: st.lists(c, max_size=4) | st.dictionar
 @FUZZ
 @given(json_st)
 def test_validators_only_ever_raise_validation_error(obj):
-    for fn in (lambda: validate_verdicts(obj, manifest_ids={"claude-code:c1"}, pricing=PRICING), lambda: validate_plan(obj, pricing=PRICING)):
+    for fn in (lambda: validate_verdicts(obj, manifest_ids={"claude-code:c1"}, catalog=CATALOG), lambda: validate_plan(obj, catalog=CATALOG)):
         try:
             fn()
         except ValidationError:
@@ -46,14 +46,14 @@ def test_validators_only_ever_raise_validation_error(obj):
 
 
 _GOOD = {"chat_id": "claude-code:c1", "task_group": "build-and-fix", "task_summary": "Built a parser", "model_used": "opus",
-         "outcome": "ok", "sufficient_tier": "standard", "cheapest_sufficient_model": "sonnet", "confidence": 0.9, "reason": "Routine"}
+         "outcome": "ok", "sufficient_tier": "standard", "weakest_sufficient_model": "sonnet", "confidence": 0.9, "reason": "Routine"}
 
 
 @FUZZ
 @given(st.fixed_dictionaries({k: st.just(_GOOD[k]) | json_st for k in VERDICT_KEYS}))
 def test_near_valid_verdicts_are_accepted_only_if_truly_valid(v):
     try:
-        out = validate_verdicts([v], manifest_ids={"claude-code:c1"}, pricing=PRICING)
+        out = validate_verdicts([v], manifest_ids={"claude-code:c1"}, catalog=CATALOG)
     except ValidationError:
         return
     (verdict,) = out  # accepted: then every field has its exact validated shape
@@ -77,13 +77,13 @@ def test_any_text_that_passes_validation_cannot_change_a_written_files_structure
         {"name": "build-and-fix", "tier": "heavy", "when": when, "examples": [example], "chats": 1, "prefer": {}},
         {"name": "quick-questions", "tier": "light", "when": "Quick answers.", "examples": [], "chats": 1, "prefer": {}}]}
     try:
-        plan = validate_plan(plan_doc, pricing=PRICING)
+        plan = validate_plan(plan_doc, catalog=CATALOG)
     except ValidationError:
         return
     with tempfile.TemporaryDirectory() as td:
         root, env = Path(td) / "proj", {"HOME": str(Path(td) / "home"), "USERPROFILE": str(Path(td) / "home")}
         for harness, write in WRITERS.items():
-            for c in write(plan, resolve_plan(plan, harness, PRICING, frozenset()), root, False, env):
+            for c in write(plan, resolve_plan(plan, harness, CATALOG, frozenset()), root, False, env):
                 c.path.resolve().relative_to(c.root.resolve())  # contained
                 if c.path.name.endswith(".model-router.yml"):
                     doc = yaml.safe_load(c.new)

@@ -18,8 +18,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from . import writers
+from .catalog import Catalog, default_catalog
 from .paths import state_dir
-from .pricing import Pricing, default_pricing
 from .resolve import resolve_plan
 from .safe_io import MAX_JSON, UnsafePathError, atomic_write, check_target, load_json, sha256_file, write_bytes_atomic
 from .schema import validate_plan
@@ -118,14 +118,14 @@ def render_diff(changes: list[FileChange]) -> str:
 
 def dry_run(
     plan_path: Path, targets: list[str], project_root: Path, global_: bool, env: Mapping[str, str], platform: str,
-    *, settings: Settings | None = None, pricing: Pricing | None = None,
+    *, settings: Settings | None = None, catalog: Catalog | None = None,
 ) -> RunRecord:
     settings = settings or load_settings(env, platform)
-    pricing = pricing or default_pricing(env, platform)
+    catalog = catalog or default_catalog()
     doc = load_json(Path(plan_path), MAX_JSON)
     if doc is None:
         raise RouteError(f"cannot read {plan_path} as JSON")
-    plan = validate_plan(doc, pricing=pricing)  # raises ValidationError before anything else happens
+    plan = validate_plan(doc, catalog=catalog)  # raises ValidationError before anything else happens
     if not targets:
         raise RouteError("no target given")
     for t in targets:
@@ -138,7 +138,7 @@ def dry_run(
     rendered: list[FileChange] = []
     try:
         for t in targets:  # later targets see earlier ones' output, so a shared AGENTS.md keeps every block
-            groups = resolve_plan(plan, t, pricing, settings.deny_models)
+            groups = resolve_plan(plan, t, catalog, settings.deny_models)
             for c in WRITERS[t](plan, groups, root, global_, env):
                 writers.overlay_set(c.path, c.new)
                 rendered.append(c)

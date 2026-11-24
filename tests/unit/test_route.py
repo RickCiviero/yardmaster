@@ -8,13 +8,13 @@ from pathlib import Path
 
 import pytest
 from yardmaster import route, writers
-from yardmaster.pricing import load_pricing
+from yardmaster.catalog import load_catalog
 from yardmaster.route import RouteError, apply, dry_run, undo
 from yardmaster.schema import Group, Plan, ValidationError
 from yardmaster.settings import Settings
 
 pytestmark = pytest.mark.pentest  # the TOCTOU / rollback / tamper cases double as pentests
-PRICING = load_pricing(Path(__file__).resolve().parents[2] / "skills" / "yardmaster" / "pricing.json")
+CATALOG = load_catalog(Path(__file__).resolve().parents[2] / "skills" / "yardmaster" / "scripts" / "yardmaster" / "models.json")
 PLAN = Plan(1, "Plan test", [
     Group("build-and-fix", "heavy", "Building code over many steps.", ["a feature"], 3, {}),
     Group("quick-questions", "light", "Quick answers.", ["a lookup"], 5, {}),
@@ -42,7 +42,7 @@ def ctx(tmp_path, monkeypatch):
 
 
 def _dry(ctx, targets=("vscode-copilot",), global_=False, settings=NO_POLICY):
-    return dry_run(ctx.plan, list(targets), ctx.proj, global_, ctx.env, sys.platform, settings=settings, pricing=PRICING)
+    return dry_run(ctx.plan, list(targets), ctx.proj, global_, ctx.env, sys.platform, settings=settings, catalog=CATALOG)
 
 
 def _apply(ctx, rec, code=None, interactive=False):
