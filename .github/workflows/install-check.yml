@@ -1,0 +1,78 @@
+name: install-check
+# Installs Yardmaster from each documented channel on fresh runners, then runs `doctor` on every install.
+# Not a required check: it tests what users get from the default branch and from the latest release.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag for the zip channel (empty: the latest release)"
+        required: false
+        default: ""
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  channels:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      attestations: read
+    env:
+      REPO: RickCiviero/yardmaster
+      TAG: ${{ inputs.tag || github.event.release.tag_name }}
+      TOOLS: ${{ github.workspace }}/.github/install-check/node_modules/.bin
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+      - name: Pinned tools (npm ci checks every package against its integrity hash)
+        working-directory: .github/install-check
+        run: npm ci
+      - name: Start the job summary
+        run: echo "### Channels on $RUNNER_OS" >> "$GITHUB_STEP_SUMMARY"
+      - name: Zip channel (release asset, checksum, attestation)
+        if: always()
+        run: |
+          set -euo pipefail
+          tag="$TAG"
+          if [ -z "$tag" ]; then tag=$(gh release view --repo "$REPO" --json tagName --jq .tagName); fi
+          version=${tag#v}
+          mkdir zip && cd zip
+          gh release download "$tag" --repo "$REPO" --pattern "yardmaster-$version.zip" --pattern SHA256SUMS
+          python "$GITHUB_WORKSPACE/tools/verify_release.py" "yardmaster-$version.zip" SHA256SUMS
+          gh attestation verify "yardmaster-$version.zip" --repo "$REPO"
+          python -m zipfile -e "yardmaster-$version.zip" unpacked
+          bash "$GITHUB_WORKSPACE/.github/install-check/check.sh" "zip, release $tag" unpacked
+      - name: npx skills channel (Codex and GitHub Copilot targets)
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir npx-check && cd npx-check && git init -q
+          "$TOOLS/skills" add "$REPO" -a codex -y --copy
+          "$TOOLS/skills" add "$REPO" -a github-copilot -y --copy
+          bash "$GITHUB_WORKSPACE/.github/install-check/check.sh" "npx skills (codex, github-copilot)" .
+      - name: Claude Code plugin marketplace channel
+        if: always()
+        run: |
+          set -euo pipefail
+          "$TOOLS/claude" plugin marketplace add "$REPO" --scope user --json
+          "$TOOLS/claude" plugin install yardmaster@yardmaster --scope user --json
+          bash "$GITHUB_WORKSPACE/.github/install-check/check.sh" "Claude Code plugin" "$HOME/.claude"
+      - name: Gemini CLI extension channel
+        if: always()
+        run: |
+          set -euo pipefail
+          "$TOOLS/gemini" extensions install "https://github.com/$REPO" --consent --skip-settings
+          bash "$GITHUB_WORKSPACE/.github/install-check/check.sh" "Gemini CLI extension" "$HOME/.gemini"

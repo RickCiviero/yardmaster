@@ -1,0 +1,11 @@
+{
+  "name": "yardmaster-install-check",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Pinned tools that .github/workflows/install-check.yml runs. Exact versions and integrity hashes live in package-lock.json; install with npm ci.",
+  "dependencies": {
+    "@anthropic-ai/claude-code": "2.1.331",
+    "@google/gemini-cli": "0.71.1",
+    "skills": "1.9.0"
+  }
+}
