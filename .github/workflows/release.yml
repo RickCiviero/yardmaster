@@ -1,0 +1,45 @@
+name: release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write # create the release
+      id-token: write # keyless signing of the build attestation
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - name: Test gate (nothing is released from a red tree)
+        run: |
+          python -m pip install -e ".[dev]"
+          python -m pytest -q
+      - name: Build the reproducible zip and SHA256SUMS
+        env:
+          TAG: ${{ github.ref_name }}
+        run: python tools/build_release.py "${TAG#v}" dist
+      - name: SBOM (CycloneDX) of the runtime, which has no third-party dependencies
+        run: |
+          python -m venv sbom-env
+          sbom-env/bin/pip install .
+          python -m pip install cyclonedx-bom
+          cyclonedx-py environment sbom-env --of JSON -o dist/sbom.cdx.json
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: dist/yardmaster-*.zip
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: gh release create "$TAG" dist/yardmaster-*.zip dist/SHA256SUMS dist/sbom.cdx.json --title "$TAG" --generate-notes --verify-tag

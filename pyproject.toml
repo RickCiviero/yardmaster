@@ -1,0 +1,34 @@
+[project]
+name = "yardmaster"
+version = "1.0.0"
+description = "Route each AI coding task to the cheapest model that does it well."
+requires-python = ">=3.11"
+dependencies = []
+license = { text = "MIT" }
+
+[project.optional-dependencies]
+dev = ["pytest", "hypothesis", "pyyaml", "tzdata", "ruff", "bandit", "pip-audit", "cyclonedx-bom"]
+
+[tool.setuptools]
+py-modules = []  # a skill folder, not an importable package; stops flat-layout auto-discovery
+
+[tool.pytest.ini_options]
+pythonpath = ["skills/yardmaster/scripts", "tools"]
+testpaths = ["tests"]
+markers = ["pentest: penetration-test cases", "fuzz: property-based fuzzing"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 150
+extend-exclude = ["reference"]
+
+[tool.bandit]
+exclude_dirs = ["tests", "reference"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"skills/yardmaster/scripts/yardmaster/redact.py" = ["E501"]  # regex tables read better unwrapped
+"tests/*" = ["E501"]
+"tests/*/*" = ["E501"]

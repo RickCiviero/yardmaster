@@ -1,0 +1,80 @@
+rules:
+  - id: yardmaster-no-eval-exec
+    languages: [python]
+    severity: ERROR
+    message: eval/exec/compile/__import__ are banned in the runtime (no dynamic code execution).
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: exec(...)
+      - pattern: compile(...)
+      - pattern: __import__(...)
+
+  - id: yardmaster-no-os-command
+    languages: [python]
+    severity: ERROR
+    message: os.system / os.popen / os.exec* are banned (no shell or process execution).
+    pattern-either:
+      - pattern: os.system(...)
+      - pattern: os.popen(...)
+      - pattern: os.execv(...)
+      - pattern: os.spawnv(...)
+
+  - id: yardmaster-no-subprocess
+    languages: [python]
+    severity: ERROR
+    message: The runtime must not start processes.
+    pattern-either:
+      - pattern: subprocess.$F(...)
+      - pattern: import subprocess
+
+  - id: yardmaster-no-shell-true
+    languages: [python]
+    severity: ERROR
+    message: shell=True is banned.
+    pattern: $F(..., shell=True, ...)
+
+  - id: yardmaster-no-unsafe-deserialisation
+    languages: [python]
+    severity: ERROR
+    message: pickle, marshal and yaml.load are banned; history is parsed as JSON/TOML only.
+    pattern-either:
+      - pattern: pickle.$F(...)
+      - pattern: marshal.$F(...)
+      - pattern: yaml.load(...)
+      - pattern: yaml.unsafe_load(...)
+
+  - id: yardmaster-no-network
+    languages: [python]
+    severity: ERROR
+    message: The runtime has no network access of its own (socket, urllib.request, http, requests).
+    pattern-either:
+      - pattern: import socket
+      - pattern: import requests
+      - pattern: import urllib.request
+      - pattern: from urllib.request import $X
+      - pattern: import http.client
+      - pattern: socket.$F(...)
+
+  - id: yardmaster-open-for-write-only-in-safe-io
+    languages: [python]
+    severity: ERROR
+    message: Opening files for writing belongs in safe_io.py (contained, symlink-aware, atomic).
+    paths:
+      exclude:
+        - "**/safe_io.py"
+    pattern-either:
+      - pattern: open($F, "w", ...)
+      - pattern: open($F, "wb", ...)
+      - pattern: open($F, "a", ...)
+      - pattern: open($F, "ab", ...)
+      - pattern: open($F, "x", ...)
+
+  - id: yardmaster-no-print-of-chat-text
+    languages: [python]
+    severity: ERROR
+    message: Never print chat text; only ids, counts and paths (the one exception is `preview`, which writes to stdout directly).
+    patterns:
+      - pattern: print(..., $X, ...)
+      - metavariable-regex:
+          metavariable: $X
+          regex: ^(text|batch|turn|turns|chat|chats|content|body)$

@@ -1,4 +1,6 @@
-# 🚦 Yardmaster
+<p align="center"><img src="assets/logo.svg" alt="Yardmaster logo: a railway semaphore over switch points" width="96"></p>
+
+# Yardmaster
 
 **Right job. Right track. Lowest fare.**
 
@@ -6,44 +8,102 @@
 
 ## Meet the Yardmaster
 
-The Yardmaster has run the same switchyard for thirty years: worn cap, pocket watch, a ledger in the breast pocket. He has seen every kind of freight come through. A heavy load goes to the big engine, a parcel goes on the handcar, and nobody pays for more track than the job needs. He doesn't trust a shipment without a manifest, and he never throws a switch without someone signing for it.
+The Yardmaster has run the same switchyard for thirty years: worn cap, pocket watch, a ledger in the breast pocket. He
+has seen every kind of freight come through. A heavy load goes to the big engine, a parcel goes on the handcar, and
+nobody pays for more track than the job needs. He doesn't trust a shipment without a manifest, and he never throws a
+switch without someone signing for it.
 
-Yardmaster does the same for your AI coding agents. It reads your past chats in GitHub Copilot, Claude Code and Codex, works out which **kind of work** each one was and the **cheapest model that would still have done it right**, then writes the model-routing config for your harness, after you approve the diff.
+Yardmaster does the same for your AI coding agents. It reads your past chats, works out which **kind of work** each one
+was and the **cheapest model that would still have done it right**, then writes the model-routing config for your
+harness, after you approve the diff.
 
-## Status: planned, not built yet
+> **Status:** v1.0.0 is built and tested, but not yet released. Manual acceptance on real history in each harness, and
+> the first CI run, are still to do. See the [changelog](CHANGELOG.md).
 
-This repository currently holds the **design**. Nothing is installable yet.
+## What it does
 
-| Document | What it is |
+| | By hand | With Yardmaster |
+|---|---|---|
+| 1. See what you spent | Export each harness's chats, add up credits and tokens | `/yardmaster ledger`: spend per harness and model, no AI call |
+| 2. Decide what needed which model | Read the chats yourself, or paste them into a model and trust the answer | `/yardmaster`: secrets are redacted, then the model you already use judges each chat |
+| 3. Set up the routing | Hand-write YAML, TOML and Markdown for each tool | A diff you approve; one marked block per file; `/yardmaster undo` restores it |
+
+## Install
+
+Claude Code:
+
+```
+/plugin marketplace add RickCiviero/yardmaster
+/plugin install yardmaster@yardmaster
+```
+
+Any agent that supports skills:
+
+```
+npx skills add RickCiviero/yardmaster
+```
+
+Codex or GitHub Copilot specifically:
+
+```
+npx skills add RickCiviero/yardmaster -a codex
+npx skills add RickCiviero/yardmaster -a github-copilot
+```
+
+Gemini CLI: `gemini extensions install https://github.com/RickCiviero/yardmaster`. Or copy `skills/yardmaster/` into
+your tool's skills folder by hand. You need Python 3.11 or newer; nothing else is installed.
+
+## Quick start
+
+| Say | What happens |
 |---|---|
-| [`docs/superpowers/specs/2026-11-23-yardmaster-design.md`](docs/superpowers/specs/2026-11-23-yardmaster-design.md) | The approved design: goals, harness coverage, security model, brand |
-| [`reference/copilot_chats_to_md.py`](reference/copilot_chats_to_md.py) | The original manual script Yardmaster replaces (behavioural reference) |
+| `/yardmaster` | Survey the last 30 days, judge each chat, show the plan and a diff, and write it only when you approve |
+| `/yardmaster ledger` | What you spent, per harness and model. No analysis |
+| `/yardmaster undo` | Put the previous config back |
+| `/yardmaster doctor` | What can be read and written here, and what is still unverified |
 
-## How to build it with Claude Code
+More in the [Quick start](docs/wiki/Quick-start.md) and [FAQ](docs/wiki/FAQ.md).
 
-1. Clone this repo and open it in Claude Code:
-   ```sh
-   git clone https://github.com/RickCiviero/yardmaster
-   cd yardmaster
-   claude
-   ```
-2. Install the [superpowers](https://github.com/obra/superpowers) plugin if you don't have it:
-   `/plugin marketplace add obra/superpowers-marketplace` → `/plugin install superpowers@superpowers-marketplace`
-3. Tell Claude Code:
-   > Read `docs/superpowers/specs/2026-11-23-yardmaster-design.md`, write an implementation plan for v1 with superpowers:writing-plans, then build it with superpowers:subagent-driven-development. Stop at every step that needs real history from my machine and ask me.
-4. Steps marked **verify** need real history from your machines (Copilot in VS Code, Copilot CLI, Claude Code, Codex). `tools/make_fixture.py` anonymises those files before they become test fixtures. Real chat text never enters the repo.
+## Supported harnesses
 
-## What v1 will do
+The write formats are built from each tool's documentation and are **not yet verified against live installs**; `/yardmaster doctor` says so.
 
-- `/yardmaster`: survey → redact → analyse with the model you're already using → propose routes → show diff → you approve → write.
-- `/yardmaster ledger`: what you spent, per harness and model. No AI call.
-- `/yardmaster undo`: put the previous config back.
-- Writes `.agents/model-router/yardmaster.model-router.yml` (VS Code Copilot), Copilot CLI agents, Claude Code subagents plus a `CLAUDE.md` block, and Codex profiles plus an `AGENTS.md` block.
-- Windows, macOS and Linux. Python 3.11+, standard library only.
+| Harness | Reads history | Writes routing | Switching |
+|---|---|---|---|
+| GitHub Copilot in VS Code | yes | `.agents/model-router/*.model-router.yml` | Automatic |
+| GitHub Copilot CLI | yes | `.github/agents/*.agent.md` and an `AGENTS.md` block | Automatic per agent |
+| Claude Code | yes | `.claude/agents/ym-*.md` and a `CLAUDE.md` block | Mostly automatic |
+| Codex | yes | profiles in `config.toml` and an `AGENTS.md` block | Partial (profile chosen at start) |
 
-## Security, in one breath
+Planned, one harness per release: v1.1 Cursor and cursor-agent, v1.2 Cline, Roo and Kilo, v1.3 Gemini CLI and Qwen Code,
+v1.4 OpenCode, v1.5 Aider, v1.6 Continue, v1.7 Goose, v1.8 Windsurf, Zed, JetBrains and others where a stable local store
+exists. Details: [Supported harnesses](docs/wiki/Supported-harnesses.md).
 
-Runs locally with no network of its own. Secrets are redacted before anything is sent. Chat text is treated as untrusted data. Model output must pass strict schemas. It writes only to allow-listed files, inside marked blocks, after you approve a diff, with a backup and undo. Releases are signed with build provenance. A penetration-test suite runs in CI on all three OSes. Details are in §9 of the design.
+## Security
+
+- **No network of its own.** Standard library only, no third-party runtime dependency, and the test suite runs with sockets blocked.
+- **Secrets are redacted before anything is sent**, and only redacted batches leave, through the AI provider your harness already uses.
+- **Chat text is untrusted.** It is fenced, and the model's output must pass strict schemas before anything is written.
+- **Safe writes.** Allow-listed files, marked blocks only, a diff and an approval code, a backup, and `undo`.
+- **Checked.** A penetration-test suite and fuzzing run in CI; releases are reproducible and carry signed build provenance.
+
+Read [COMPLIANCE.md](COMPLIANCE.md), [SECURITY.md](SECURITY.md), the [threat model](docs/security/threat-model.md), the
+[ASVS L2 mapping](docs/security/asvs-l2.md) and the [pentest report](docs/security/pentest-report.md).
+
+## Verify a release
+
+```sh
+sha256sum -c SHA256SUMS
+gh attestation verify yardmaster-X.Y.Z.zip --repo RickCiviero/yardmaster
+```
+
+The zip is reproducible: `python tools/build_release.py X.Y.Z out/` from the tag gives the same bytes.
+
+## Contributing
+
+Read [Contributing](docs/wiki/Contributing.md). Run `python -m pytest -q` and `ruff check .` before you open a pull
+request. Real chat text must never enter the repo: use `tools/make_fixture.py`. Report vulnerabilities privately, as
+described in [SECURITY.md](SECURITY.md).
 
 ## Licence
 
