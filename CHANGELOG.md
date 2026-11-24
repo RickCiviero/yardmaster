@@ -14,6 +14,7 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 - `install-check` workflow: installs from each documented channel on fresh Windows, macOS and Linux runners, then runs `doctor`. The pinned tools use an integrity-hashed lock file.
 - `tools/verify_release.py`: checks a downloaded release file against `SHA256SUMS`.
 - The wiki sync can be started by hand.
+- Supply chain: every `pip install` in a workflow installs from a hash-locked file (`.github/requirements/`), and a test enforces it. Release files are signed with Sigstore from the next release on. ClusterFuzzLite runs a fuzz target for the verdict and plan validators on every pull request.
 
 ## [1.0.0] - 2026-11-24
 
