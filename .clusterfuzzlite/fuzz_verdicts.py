@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """ClusterFuzzLite target: bytes given to the verdict and plan validators may only ever raise ValidationError.
 
 build.sh copies the runtime to skill/ next to this file, so the target runs the code that ships, not a stub."""
