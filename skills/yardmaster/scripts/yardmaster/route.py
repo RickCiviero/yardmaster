@@ -37,7 +37,8 @@ ALLOWED = [re.compile(p) for p in (
     r"agents/ym-[a-z0-9-]+(\.agent)?\.md",
     r"AGENTS\.md",
     r"CLAUDE\.md",
-    r"config\.toml",
+    r"config\.toml",  # v1.0.0 wrote Codex profiles here; kept so `undo` can restore those runs
+    r"ym-[a-z0-9-]+\.config\.toml",
 )]
 
 

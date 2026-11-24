@@ -120,13 +120,13 @@ def test_full_flow_each_target(target, world, capsys):
         doc = yaml.safe_load((w.proj / EXPECT[target][0]).read_text(encoding="utf-8"))
         assert doc["version"] == 1 and {r["model"] for r in doc["routes"]} and all(set(r) == {"model", "when"} for r in doc["routes"])
     if target == "codex":
-        cfg = tomllib.loads(next(w.home.rglob("config.toml")).read_text(encoding="utf-8"))
-        assert any(k.startswith("ym-") for k in cfg["profiles"])
+        prof = tomllib.loads(next(w.home.rglob("ym-*.config.toml")).read_text(encoding="utf-8"))
+        assert set(prof) == {"model"}
     _assert_no_secrets(w.home, w.proj, w.out)  # state dir, record, report, written configs, batches, verdicts, plan
 
     assert main(["undo", run_id]) == 0
     assert not any(p.is_file() for p in w.proj.rglob("*"))
-    assert not list(w.home.rglob("config.toml"))
+    assert not list(w.home.rglob("ym-*.config.toml"))
     assert main(["clean"]) == 0
     assert not w.out.exists()  # the survey folder (redacted chat text) is gone
     assert not [d for d in w.home.rglob("ym-*") if d.is_dir()]

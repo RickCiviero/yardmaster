@@ -63,15 +63,15 @@ def test_target_all_covers_every_harness_and_is_reversible(setup, capsys, home):
     proj, plan = setup
     rc, out, (run_id, code) = _dry(capsys, proj, plan, "--target", "all")
     assert rc == 0
-    for needle in (".agents", "ym-build-and-fix.agent.md", "CLAUDE.md", "config.toml", "AGENTS.md"):
+    for needle in (".agents", "ym-build-and-fix.agent.md", "CLAUDE.md", "ym-build-and-fix.config.toml", "AGENTS.md"):
         assert needle in out
     assert main(["route", "--apply", run_id, "--code", code]) == 0
     assert (proj / ".agents" / "model-router" / "yardmaster.model-router.yml").is_file()
     assert (proj / "AGENTS.md").read_text(encoding="utf-8").count("yardmaster:begin") == 2  # copilot-cli + codex
-    codex_cfg = next(home.rglob("config.toml"))
-    assert "ym-build-and-fix" in codex_cfg.read_text(encoding="utf-8")
+    codex_profile = next(home.rglob("ym-build-and-fix.config.toml"))
+    assert 'model = "gpt-5"' in codex_profile.read_text(encoding="utf-8")
     assert main(["undo", run_id]) == 0
-    assert not (proj / "AGENTS.md").exists() and not (proj / ".agents").exists() and not codex_cfg.exists()
+    assert not (proj / "AGENTS.md").exists() and not (proj / ".agents").exists() and not codex_profile.exists()
 
 
 def test_argument_errors(setup, capsys, tmp_path):
