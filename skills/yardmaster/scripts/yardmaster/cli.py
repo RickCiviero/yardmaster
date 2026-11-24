@@ -13,6 +13,8 @@ from . import __version__, paths
 from .batch import make_batches, write_batches
 from .collectors import COLLECTORS, CollectorContext, in_project
 from .detect import detect_harness
+from .doctor import doctor, render_doctor
+from .export_md import export_md
 from .ledger import ledger, render_ledger
 from .pricing import Pricing, default_pricing
 from .route import RouteError, apply, dry_run, undo
@@ -54,6 +56,11 @@ def _build_parser() -> argparse.ArgumentParser:
     pv.add_argument("n", type=int)
     sub.add_parser("clean", help="delete the survey directory")
     sub.add_parser("ledger", parents=[_common()], help="spend per harness and model (no model call)")
+    sub.add_parser("doctor", help="what Yardmaster can read and write here, and what is unverified")
+    x = sub.add_parser("export-md", parents=[_common()], help="write a redacted Markdown archive of the range")
+    x.add_argument("--out", default=".", help="folder for the .md file (default: cwd)")
+    x.add_argument("--overwrite", action="store_true")
+    x.add_argument("--force", action="store_true", help="allow writing inside a git repository")
     r = sub.add_parser("route", help="preview (--dry-run) or write (--apply RUN_ID) the routing config")
     r.add_argument("--target", help="harness id(s), comma-separated, or: all | auto")
     r.add_argument("--plan", help="the validated plan.json")
@@ -246,6 +253,22 @@ def _cmd_validate(args) -> int:
         return 1
 
 
+def _cmd_doctor(_args) -> int:
+    rows = doctor(os.environ, sys.platform)
+    print(render_doctor(rows), end="")
+    return 1 if any(status == "fail" for _, status, _ in rows) else 0
+
+
+def _cmd_export_md(args) -> int:
+    settings = load_settings(os.environ, sys.platform)
+    r, _, chats, warnings = _collect(args, _harnesses(args, settings))
+    for w in warnings:
+        print(f"warning: {w}")
+    out = export_md(chats, r, Path(args.out), pii=settings.redact_pii or args.redact_pii, overwrite=args.overwrite, force=args.force)
+    print(f"Written: {out} ({len(chats)} chats, redacted)")
+    return 0
+
+
 def _targets(spec: str, settings) -> list[str]:
     if spec == "auto":
         found = detect_harness(os.environ)
@@ -282,8 +305,17 @@ def _cmd_undo(args) -> int:
     return 0
 
 
-COMMANDS = {"route": _cmd_route, "undo": _cmd_undo, "survey": _cmd_survey, "preview": _cmd_preview, "clean": _cmd_clean, "ledger": _cmd_ledger,
-            "validate": _cmd_validate}
+COMMANDS = {
+    "doctor": _cmd_doctor,
+    "export-md": _cmd_export_md,
+    "route": _cmd_route,
+    "undo": _cmd_undo,
+    "survey": _cmd_survey,
+    "preview": _cmd_preview,
+    "clean": _cmd_clean,
+    "ledger": _cmd_ledger,
+    "validate": _cmd_validate,
+}
 
 
 def main(argv: list[str] | None = None) -> int:
