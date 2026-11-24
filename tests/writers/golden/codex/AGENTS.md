@@ -1,7 +1,7 @@
 <!-- yardmaster:begin codex v1 -->
 ## Model routing (Yardmaster)
 
-Managed by Yardmaster 1.1.0 (2026-11-23). Edits inside this block are replaced the next time it runs; edit outside it freely.
+Managed by Yardmaster 1.1.1 (2026-11-23). Edits inside this block are replaced the next time it runs; edit outside it freely.
 
 Codex cannot change model mid-session. Start it with the profile that matches the kind of work:
 

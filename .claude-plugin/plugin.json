@@ -1,6 +1,6 @@
 {
   "name": "yardmaster",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Route each kind of AI coding task to the weakest model that does it well. Reads your Copilot, Claude Code and Codex chat history and writes model-routing config, after you approve the diff.",
   "author": { "name": "RickCiviero", "url": "https://github.com/RickCiviero" },
   "homepage": "https://github.com/RickCiviero/yardmaster",

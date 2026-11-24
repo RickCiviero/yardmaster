@@ -47,6 +47,7 @@ Download `yardmaster-X.Y.Z.zip`, `SHA256SUMS` and `sbom.cdx.json` from the GitHu
 ```sh
 sha256sum -c SHA256SUMS                                   # the zip matches the published checksum
 gh attestation verify yardmaster-X.Y.Z.zip --repo RickCiviero/yardmaster   # signed provenance (Sigstore, SLSA)
+cosign verify-blob --bundle yardmaster-X.Y.Z.zip.sigstore.json --certificate-identity-regexp 'https://github.com/RickCiviero/yardmaster/.github/workflows/release.yml@refs/tags/v.*' --certificate-oidc-issuer https://token.actions.githubusercontent.com yardmaster-X.Y.Z.zip   # the release signature
 ```
 
 The zip is **reproducible**: from a checkout of the tag, `python tools/build_release.py X.Y.Z out/` produces the same

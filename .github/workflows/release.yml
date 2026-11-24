@@ -51,10 +51,10 @@ jobs:
         run: |
           cd dist
           for f in yardmaster-*.zip yardmaster-*.whl yardmaster-*.tar.gz SHA256SUMS sbom.cdx.json; do
-            cosign sign-blob --yes --output-signature "$f.sig" --output-certificate "$f.pem" "$f"
+            cosign sign-blob --yes --bundle "$f.sigstore.json" "$f"
           done
       - name: Publish the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ github.ref_name }}
-        run: gh release create "$TAG" dist/yardmaster-*.zip dist/yardmaster-*.whl dist/yardmaster-*.tar.gz dist/SHA256SUMS dist/sbom.cdx.json dist/*.sig dist/*.pem --title "$TAG" --generate-notes --verify-tag
+        run: gh release create "$TAG" dist/yardmaster-*.zip dist/yardmaster-*.whl dist/yardmaster-*.tar.gz dist/SHA256SUMS dist/sbom.cdx.json dist/*.sigstore.json --title "$TAG" --generate-notes --verify-tag
