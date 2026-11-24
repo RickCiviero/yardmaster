@@ -14,6 +14,15 @@ SLUG = re.compile(r"^[a-z][a-z0-9-]{1,31}$")
 OUTCOMES = ("ok", "struggled", "failed")
 _BANNED = ("`", "<<<", "://", "../", "..\\", "~/", "<!--", "-->")
 _DRIVE = re.compile(r"[A-Za-z]:[\\/]")
+# shortcut: a heuristic, not a proof. Model-written text ends up in files agents read later (CLAUDE.md, subagents), so
+# text that addresses an assistant or names a shell command is refused; the user's review of the diff is the real gate.
+_INSTRUCTION = re.compile(
+    r"(?i)\b(ignore|disregard|forget|override|bypass)\b[^.\n]{0,60}\b(instructions?|prompts?|rules?|above|previous|everything|safeguards?|guardrails?)\b"
+    r"|system prompt|developer mode|\byou (must|are now|should now)\b|\bexfiltrat\w*"
+    r"|\brm\s+-rf\b|\b(sudo|powershell|wget|curl|chmod)\b|\bbash\s+-c\b"
+    r"|\bapprove\b[^.\n]{0,30}\b(diff|plan|change|apply)\w*|\bwithout (asking|confirmation|approval)\b"
+    r"|javascript:|<\s*script|\beval\s*\(|\bexec\s*\("
+)
 VERDICT_KEYS = {"chat_id", "task_group", "task_summary", "model_used", "outcome", "sufficient_tier",
                 "cheapest_sufficient_model", "confidence", "reason"}
 GROUP_KEYS = {"name", "tier", "when", "examples", "chats", "prefer"}
@@ -47,6 +56,8 @@ def _text(v: object, path: str, *, max_chars: int, max_words: int | None = None,
         raise ValidationError("contains control or invisible characters", path)
     if any(b in v for b in _BANNED) or _DRIVE.search(v):
         raise ValidationError("contains a forbidden sequence (markup, URL or path)", path)
+    if _INSTRUCTION.search(v):
+        raise ValidationError("reads like an instruction to an assistant or a shell command; describe the work neutrally", path)
     return v
 
 

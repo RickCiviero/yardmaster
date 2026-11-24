@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from yardmaster.model import Chat
+from yardmaster.safe_io import has_link_below
 
 
 @dataclass
@@ -29,6 +30,16 @@ def mtime_utc(p: Path) -> datetime:
         return datetime.fromtimestamp(p.stat().st_mtime, tz=UTC)
     except OSError:
         return datetime.min.replace(tzinfo=UTC)
+
+
+def skip_linked(ctx: CollectorContext, path: Path, root: Path) -> bool:
+    """Never follow a link planted inside a history folder: it could point the collector at files that are not chats."""
+    if not has_link_below(path, root):
+        return False
+    note = "skipped file(s) reached through a symlink or junction inside the history folder"
+    if note not in ctx.warnings:
+        ctx.warnings.append(note)
+    return True
 
 
 def nat(v: object) -> int:

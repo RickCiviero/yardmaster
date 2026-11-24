@@ -18,7 +18,7 @@ from .export_md import export_md
 from .ledger import ledger, render_ledger
 from .pricing import Pricing, default_pricing
 from .route import RouteError, apply, dry_run, undo
-from .safe_io import load_json, make_private_dir, read_text
+from .safe_io import MAX_JSON, load_json, make_private_dir, read_text
 from .schema import ValidationError, load_manifest_ids, validate_plan, validate_verdicts
 from .settings import load_settings
 from .timeutil import resolve_range, to_utc_bounds
@@ -229,7 +229,7 @@ def _cmd_ledger(args) -> int:
 
 
 def _cmd_validate(args) -> int:
-    doc = load_json(Path(args.file))
+    doc = load_json(Path(args.file), MAX_JSON)
     if doc is None:
         print(f"error: cannot read {args.file} as JSON")
         return 2
@@ -241,7 +241,7 @@ def _cmd_validate(args) -> int:
             return 0
         d = _survey_dir()
         manifest = Path(args.manifest) if args.manifest else (d / "manifest.json" if d else None)
-        m = load_json(manifest) if manifest else None
+        m = load_json(manifest, MAX_JSON) if manifest else None
         if not isinstance(m, dict):
             print("error: no manifest; run `survey` first or pass --manifest")
             return 2

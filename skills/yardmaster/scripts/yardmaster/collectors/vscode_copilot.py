@@ -11,7 +11,7 @@ from yardmaster.paths import vscode_user_dirs
 from yardmaster.safe_io import MAX_FILE, iter_jsonl, load_json
 from yardmaster.timeutil import parse_ts
 
-from . import COLLECTORS, CollectorContext, in_project, mtime_utc
+from . import COLLECTORS, CollectorContext, in_project, mtime_utc, skip_linked
 
 
 def _is_num(v: object) -> bool:
@@ -129,6 +129,7 @@ def collect(ctx: CollectorContext) -> list[Chat]:
         if empty.is_dir():
             sources += [(f, None) for f in sorted(empty.iterdir()) if f.suffix in (".json", ".jsonl")]
 
+        sources = [(f, ws) for f, ws in sources if not skip_linked(ctx, f, ud)]
         for f, ws in sources:
             try:
                 if f.stat().st_size > MAX_FILE:

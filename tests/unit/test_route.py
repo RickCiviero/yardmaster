@@ -13,6 +13,7 @@ from yardmaster.route import RouteError, apply, dry_run, undo
 from yardmaster.schema import Group, Plan, ValidationError
 from yardmaster.settings import Settings
 
+pytestmark = pytest.mark.pentest  # the TOCTOU / rollback / tamper cases double as pentests
 PRICING = load_pricing(Path(__file__).resolve().parents[2] / "skills" / "yardmaster" / "pricing.json")
 PLAN = Plan(1, "Plan test", [
     Group("build-and-fix", "heavy", "Building code over many steps.", ["a feature"], 3, {}),

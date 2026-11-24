@@ -21,7 +21,7 @@ from . import writers
 from .paths import state_dir
 from .pricing import Pricing, default_pricing
 from .resolve import resolve_plan
-from .safe_io import UnsafePathError, atomic_write, check_target, load_json, sha256_file, write_bytes_atomic
+from .safe_io import MAX_JSON, UnsafePathError, atomic_write, check_target, load_json, sha256_file, write_bytes_atomic
 from .schema import validate_plan
 from .settings import Settings, load_settings
 from .writers import WRITERS, FileChange
@@ -121,7 +121,7 @@ def dry_run(
 ) -> RunRecord:
     settings = settings or load_settings(env, platform)
     pricing = pricing or default_pricing(env, platform)
-    doc = load_json(Path(plan_path))
+    doc = load_json(Path(plan_path), MAX_JSON)
     if doc is None:
         raise RouteError(f"cannot read {plan_path} as JSON")
     plan = validate_plan(doc, pricing=pricing)  # raises ValidationError before anything else happens

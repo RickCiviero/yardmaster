@@ -44,6 +44,21 @@ def _is_link(p: Path) -> bool:
     return bool(attrs & _REPARSE_POINT)
 
 
+def has_link_below(path: Path, root: Path) -> bool:
+    """True if any component of `path` BELOW `root` is a symlink or junction (root itself may be one a user made)."""
+    abs_p, abs_root = Path(os.path.abspath(path)), Path(os.path.abspath(root))
+    try:
+        rel = abs_p.relative_to(abs_root)
+    except ValueError:
+        return True
+    cur = abs_root
+    for part in rel.parts:
+        cur = cur / part
+        if (cur.exists() or cur.is_symlink()) and _is_link(cur):
+            return True
+    return False
+
+
 def _open_fd(path: Path) -> int:
     flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_BINARY", 0)
     return os.open(path, flags)
@@ -64,7 +79,7 @@ def read_text(path: Path, max_bytes: int = MAX_FILE) -> str:
 def iter_jsonl(path: Path, max_line: int = MAX_LINE) -> Iterator[dict]:
     """Yield the dict lines of a JSONL file; skip anything blank, malformed, oversized or too deep."""
     try:
-        with open(path, "rb") as f:
+        with os.fdopen(_open_fd(Path(path)), "rb") as f:  # O_NOFOLLOW where available: a symlinked file is refused
             while True:
                 raw = f.readline(max_line + 1)
                 if not raw:
@@ -88,9 +103,12 @@ def iter_jsonl(path: Path, max_line: int = MAX_LINE) -> Iterator[dict]:
         return
 
 
-def load_json(path: Path) -> object | None:
+MAX_JSON = 8_000_000  # model output (verdicts, plan) and manifests: far above any real size, far below a memory bomb
+
+
+def load_json(path: Path, max_bytes: int = MAX_FILE) -> object | None:
     try:
-        return json.loads(read_text(path))
+        return json.loads(read_text(path, max_bytes))
     except (OSError, ValueError, RecursionError):
         return None
 

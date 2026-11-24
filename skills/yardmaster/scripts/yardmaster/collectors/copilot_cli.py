@@ -8,7 +8,7 @@ from yardmaster.model import Chat, Turn
 from yardmaster.safe_io import MAX_FILE, iter_jsonl, read_text
 from yardmaster.timeutil import parse_ts
 
-from . import COLLECTORS, CollectorContext, in_project, mtime_utc
+from . import COLLECTORS, CollectorContext, in_project, mtime_utc, skip_linked
 
 NANO_PER_CREDIT = 1e9
 
@@ -42,13 +42,14 @@ def _home(ctx: CollectorContext) -> Path:
 
 
 def collect(ctx: CollectorContext) -> list[Chat]:
-    state = _home(ctx) / "session-state"
+    home = _home(ctx)
+    state = home / "session-state"
     chats: list[Chat] = []
     if not state.is_dir():
         return chats
     for d in sorted(state.iterdir()):
         ev = d / "events.jsonl" if d.is_dir() else (d if d.suffix == ".jsonl" else None)
-        if ev is None or not ev.exists() or mtime_utc(ev) < ctx.since:
+        if ev is None or skip_linked(ctx, ev, home) or not ev.exists() or mtime_utc(ev) < ctx.since:
             continue
         if ev.stat().st_size > MAX_FILE:
             ctx.warnings.append(f"skipped oversized file {ev.parent.name}")

@@ -46,7 +46,7 @@ RULES: tuple[Rule, ...] = (
     _r("url-credentials", r"\b[a-z][a-z0-9+.\-]{1,20}://[^\s:/@]{1,100}:[^\s/@]{1,200}@[^\s'\"`<>]{1,300}"),
     _r("connection-string", r"\b(?:server|data source|host)\s{0,5}=[^;\n]{1,200};[^\n]{0,300}?\b(?:password|pwd)\s{0,5}=\s{0,5}[^;\s'\"]{1,200}", re.I),
     _r("auth-header", r"\b(?:bearer|basic)\s{1,5}[A-Za-z0-9._~+/\-]{16,2000}=*", re.I),
-    _r("generic-secret", r"[\w\-]{0,30}(?:password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key|auth)[\w\-]{0,20}\s{0,5}[:=]\s{0,5}['\"]?[^\s'\"`,;]{6,500}", re.I),
+    _r("generic-secret", r"(?:password|passwd|pwd|secret|token|api[_-]?key|access[_-]?key|auth)[\w\-]{0,20}\s{0,5}[:=]\s{0,5}['\"]?[^\s'\"`,;]{6,500}", re.I),
 )
 
 PII_RULES: tuple[Rule, ...] = (
@@ -90,6 +90,7 @@ def _windows(text: str):
 
 
 def redact(text: str, *, pii: bool = False) -> tuple[str, Counter[str]]:
+    text = text.encode("utf-8", "replace").decode("utf-8")  # lone surrogates from hostile JSON would crash every writer
     rules = RULES + (PII_RULES if pii else ())
     entropy_idx = len(RULES)
     spans: list[tuple[int, int, int, str]] = []  # (start, end, priority, name)

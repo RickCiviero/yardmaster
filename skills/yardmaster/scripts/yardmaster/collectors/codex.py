@@ -13,7 +13,7 @@ from yardmaster.model import Chat, Turn
 from yardmaster.safe_io import MAX_FILE, iter_jsonl
 from yardmaster.timeutil import parse_ts
 
-from . import COLLECTORS, CollectorContext, in_project, mtime_utc, nat
+from . import COLLECTORS, CollectorContext, in_project, mtime_utc, nat, skip_linked
 
 _MIN = datetime.min.replace(tzinfo=UTC)
 
@@ -101,12 +101,15 @@ def _session(ctx: CollectorContext, f: Path) -> Chat | None:
 
 
 def collect(ctx: CollectorContext) -> list[Chat]:
-    sessions = _root(ctx) / "sessions"
+    root = _root(ctx)
+    sessions = root / "sessions"
     if not sessions.is_dir():
         return []
     lo, hi = (ctx.since - timedelta(days=1)).date(), (ctx.until + timedelta(days=1)).date()  # local-date dirs vs UTC
     chats: list[Chat] = []
     for f in sorted(sessions.rglob("rollout-*.jsonl")):
+        if skip_linked(ctx, f, root):
+            continue
         d = _dir_date(f.relative_to(sessions).parts)
         if (d is not None and not (lo <= d <= hi)) or mtime_utc(f) < ctx.since:
             continue

@@ -13,7 +13,7 @@ from yardmaster.model import Chat, Turn
 from yardmaster.safe_io import MAX_FILE, iter_jsonl
 from yardmaster.timeutil import parse_ts
 
-from . import COLLECTORS, CollectorContext, in_project, mtime_utc, nat
+from . import COLLECTORS, CollectorContext, in_project, mtime_utc, nat, skip_linked
 
 _MIN = datetime.min.replace(tzinfo=UTC)
 
@@ -136,14 +136,18 @@ def _session(ctx: CollectorContext, sid: str, files: list[Path]) -> Chat | None:
 
 
 def collect(ctx: CollectorContext) -> list[Chat]:
-    projects = _root(ctx) / "projects"
+    root = _root(ctx)
+    projects = root / "projects"
     if not projects.is_dir():
         return []
     chats: list[Chat] = []
     for pdir in sorted(p for p in projects.iterdir() if p.is_dir()):
         for main in sorted(pdir.glob("*.jsonl")):
+            if skip_linked(ctx, main, root):
+                continue
             sub = pdir / main.stem / "subagents"
-            files = [main, *(sorted(sub.glob("*.jsonl")) if sub.is_dir() else [])]
+            subs = [f for f in sorted(sub.glob("*.jsonl")) if not skip_linked(ctx, f, root)] if sub.is_dir() else []
+            files = [main, *subs]
             if chat := _session(ctx, main.stem, files):
                 chats.append(chat)
     return chats
