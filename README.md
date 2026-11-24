@@ -73,7 +73,7 @@ The write formats are built from each tool's documentation and are **not yet ver
 | GitHub Copilot in VS Code | yes | `.agents/model-router/*.model-router.yml` | Automatic |
 | GitHub Copilot CLI | yes | `.github/agents/*.agent.md` and an `AGENTS.md` block | Automatic per agent |
 | Claude Code | yes | `.claude/agents/ym-*.md` and a `CLAUDE.md` block | Mostly automatic |
-| Codex | yes | profiles in `config.toml` and an `AGENTS.md` block | Partial (profile chosen at start) |
+| Codex | yes | profile files `~/.codex/ym-*.config.toml` and an `AGENTS.md` block | Partial (profile chosen at start) |
 
 Planned, one harness per release: v1.1 Cursor and cursor-agent, v1.2 Cline, Roo and Kilo, v1.3 Gemini CLI and Qwen Code,
 v1.4 OpenCode, v1.5 Aider, v1.6 Continue, v1.7 Goose, v1.8 Windsurf, Zed, JetBrains and others where a stable local store
