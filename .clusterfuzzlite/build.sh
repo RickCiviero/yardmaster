@@ -1,5 +1,7 @@
 #!/bin/bash -eu
-# Runs in the builder, in the repository root. The runtime is copied next to the target so the target imports what ships.
-cp -r skills/yardmaster "$OUT/skill"
-cp .clusterfuzzlite/fuzz_verdicts.py "$OUT/fuzz_verdicts"
-chmod +x "$OUT/fuzz_verdicts"  # a plain script, not a PyInstaller bundle: its __file__ must point beside skill/
+# Runs in the builder, in the repository root. PyInstaller must see the runtime and the pricing data as ordinary imports,
+# so both go on PYTHONPATH, and the target loads pricing from a generated module rather than from a file beside __file__.
+BUILD=$(mktemp -d)
+python3 -c "import json,sys; open(sys.argv[1], 'w').write('DATA = ' + repr(json.load(open('skills/yardmaster/pricing.json'))) + '\n')" "$BUILD/pricing_data.py"
+export PYTHONPATH="$PWD/skills/yardmaster/scripts:$BUILD"
+compile_python_fuzzer .clusterfuzzlite/fuzz_verdicts.py
