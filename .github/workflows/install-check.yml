@@ -25,10 +25,12 @@ jobs:
     permissions:
       contents: read
       attestations: read
+    defaults:
+      run:
+        shell: bash # Windows runners default to PowerShell, which cannot parse these scripts
     env:
       REPO: RickCiviero/yardmaster
       TAG: ${{ inputs.tag || github.event.release.tag_name }}
-      TOOLS: ${{ github.workspace }}/.github/install-check/node_modules/.bin
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -46,33 +48,40 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
+          root=$(pwd)
           tag="$TAG"
           if [ -z "$tag" ]; then tag=$(gh release view --repo "$REPO" --json tagName --jq .tagName); fi
           version=${tag#v}
           mkdir zip && cd zip
           gh release download "$tag" --repo "$REPO" --pattern "yardmaster-$version.zip" --pattern SHA256SUMS
-          python "$GITHUB_WORKSPACE/tools/verify_release.py" "yardmaster-$version.zip" SHA256SUMS
+          python "$root/tools/verify_release.py" "yardmaster-$version.zip" SHA256SUMS
           gh attestation verify "yardmaster-$version.zip" --repo "$REPO"
           python -m zipfile -e "yardmaster-$version.zip" unpacked
-          bash "$GITHUB_WORKSPACE/.github/install-check/check.sh" "zip, release $tag" unpacked
+          bash "$root/.github/install-check/check.sh" "zip, release $tag" unpacked
       - name: npx skills channel (Codex and GitHub Copilot targets)
         if: always()
         run: |
           set -euo pipefail
+          root=$(pwd)
+          tools="$root/.github/install-check/node_modules/.bin"
           mkdir npx-check && cd npx-check && git init -q
-          "$TOOLS/skills" add "$REPO" -a codex -y --copy
-          "$TOOLS/skills" add "$REPO" -a github-copilot -y --copy
-          bash "$GITHUB_WORKSPACE/.github/install-check/check.sh" "npx skills (codex, github-copilot)" .
+          "$tools/skills" add "$REPO" -a codex -y --copy
+          "$tools/skills" add "$REPO" -a github-copilot -y --copy
+          bash "$root/.github/install-check/check.sh" "npx skills (codex, github-copilot)" .
       - name: Claude Code plugin marketplace channel
         if: always()
         run: |
           set -euo pipefail
-          "$TOOLS/claude" plugin marketplace add "$REPO" --scope user --json
-          "$TOOLS/claude" plugin install yardmaster@yardmaster --scope user --json
-          bash "$GITHUB_WORKSPACE/.github/install-check/check.sh" "Claude Code plugin" "$HOME/.claude"
+          root=$(pwd)
+          tools="$root/.github/install-check/node_modules/.bin"
+          "$tools/claude" plugin marketplace add "$REPO" --scope user --json
+          "$tools/claude" plugin install yardmaster@yardmaster --scope user --json
+          bash "$root/.github/install-check/check.sh" "Claude Code plugin" "$HOME/.claude"
       - name: Gemini CLI extension channel
         if: always()
         run: |
           set -euo pipefail
-          "$TOOLS/gemini" extensions install "https://github.com/$REPO" --consent --skip-settings
-          bash "$GITHUB_WORKSPACE/.github/install-check/check.sh" "Gemini CLI extension" "$HOME/.gemini"
+          root=$(pwd)
+          tools="$root/.github/install-check/node_modules/.bin"
+          "$tools/gemini" extensions install "https://github.com/$REPO" --consent --skip-settings
+          bash "$root/.github/install-check/check.sh" "Gemini CLI extension" "$HOME/.gemini"
