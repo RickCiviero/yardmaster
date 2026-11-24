@@ -51,7 +51,7 @@ rules:
       - pattern: import socket
       - pattern: import requests
       - pattern: import urllib.request
-      - pattern: from urllib.request import ...
+      - pattern: from urllib.request import $X
       - pattern: import http.client
       - pattern: socket.$F(...)
 
