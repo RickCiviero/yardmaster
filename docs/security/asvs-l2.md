@@ -198,6 +198,6 @@ Each cited test is checked by `tests/unit/test_docs_links.py`, so a renamed or d
 
 | Target | State |
 |---|---|
-| OpenSSF Scorecard 8 or higher | Not yet measured. The workflow (`scorecard.yml`) runs on GitHub after the first push; any check below 8 will be listed here with its reason |
+| OpenSSF Scorecard 8 or higher | First run on 2026-11-24 scored **6.2** before branch protection and the repository settings were applied. Re-check after the next weekly run; any check still below 8 will be listed here with its reason |
 | SLSA Build L3 | Provenance is produced by `actions/attest-build-provenance` in `release.yml`; it is verified in `COMPLIANCE.md` |
-| Branch protection, private vulnerability reporting, secret scanning | **Owner action pending.** The commands are in `docs/security/repo-hardening.md`. Record the date here once done: _not yet applied_ |
+| Branch protection, private vulnerability reporting, secret scanning | Applied on 2026-11-24: `main` protected (15 required checks, linear history, signed commits, pull requests only), private vulnerability reporting on, secret scanning and push protection on, tags `v*` cannot be moved or deleted |

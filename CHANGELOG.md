@@ -5,7 +5,7 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 
 ## [Unreleased]
 
-### 1.0.0 (not yet tagged)
+## [1.0.0] - 2026-11-24
 
 - Collectors for GitHub Copilot in VS Code, GitHub Copilot CLI, Claude Code and Codex, read-only.
 - Writers for the same four harnesses: marked blocks only, diff and approval code, backup, `undo`.
@@ -18,5 +18,5 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 - Security documents: threat model, ASVS 4.0.3 L2 mapping, data flow, `COMPLIANCE.md`, `SECURITY.md`.
 - README, wiki pages and the logo.
 
-Known limits at this point: the write formats are not yet verified against live installs of each harness, `pricing.json`
-holds estimates (`verified` is false), and the CI scanners have not yet run on GitHub.
+Known limits: the write formats are not yet verified against live installs of each harness, and `pricing.json` holds
+estimates (`verified` is false). The tag is not GPG-signed; the release zip carries a Sigstore build attestation instead.
