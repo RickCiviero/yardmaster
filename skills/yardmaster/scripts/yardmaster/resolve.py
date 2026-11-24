@@ -36,5 +36,6 @@ def resolve_plan(plan: Plan, harness: str, pricing: Pricing, deny: frozenset[str
         whens = [g.when.strip() for g in ordered]
         dot = "." if all(w.endswith(".") for w in whens) else ""
         examples = [e for g in ordered for e in g.examples][:3]
-        out.append(ResolvedGroup(top.name, top.tier, "; ".join(w.rstrip(".") for w in whens) + dot, examples, members[0][1]))
+        when = whens[0] if len(whens) == 1 else "; ".join(w.rstrip(".") for w in whens) + dot  # a lone group is left exactly as written
+        out.append(ResolvedGroup(top.name, top.tier, when, examples, members[0][1]))
     return sorted(out, key=lambda r: r.model.sort_key, reverse=True)

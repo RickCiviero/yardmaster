@@ -87,7 +87,7 @@ def test_any_text_that_passes_validation_cannot_change_a_written_files_structure
                 c.path.resolve().relative_to(c.root.resolve())  # contained
                 if c.path.name.endswith(".model-router.yml"):
                     doc = yaml.safe_load(c.new)
-                    assert doc["description"] == desc and doc["routes"][0]["when"] == when and len(doc["routes"]) == 2
+                    assert doc["description"] == desc and doc["routes"][0]["when"] == when.strip() and len(doc["routes"]) == 2
                 elif c.new.startswith("---\n"):
                     assert set(yaml.safe_load(c.new.split("---\n")[1])) == {"name", "description", "model"}
                 elif c.path.name == "config.toml":

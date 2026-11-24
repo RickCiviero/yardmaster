@@ -66,3 +66,9 @@ def test_no_model_available_raises():
         resolve_plan(plan, "claude-code", PRICING, deny)
     with pytest.raises(ValidationError, match="no model"):
         resolve_plan(plan, "unknown-harness", PRICING, frozenset())
+
+
+def test_a_group_that_is_not_merged_keeps_its_text_exactly():
+    for when in ("Quick answers..", "Quick answers.  ", "Quick answers", "..", "x."):
+        (g,) = resolve_plan(_plan(_g("quick", "light", when)), "claude-code", PRICING, NONE)
+        assert g.when == when.strip(), when
