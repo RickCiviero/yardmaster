@@ -7,9 +7,9 @@ def test_version_and_help(capsys):
     from yardmaster import __version__
     from yardmaster.cli import main
 
-    assert __version__ == "1.0.0"
+    assert __version__ == "1.1.0"
     assert main(["--version"]) == 0
-    assert "1.0.0" in capsys.readouterr().out
+    assert "1.1.0" in capsys.readouterr().out
 
 
 def test_no_network_guard_active():

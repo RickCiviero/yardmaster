@@ -1,5 +1,5 @@
 {
   "name": "yardmaster",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Reserved for Gemini CLI support (planned for v1.1). Not supported in v1: v1 covers Copilot, Claude Code and Codex."
 }
