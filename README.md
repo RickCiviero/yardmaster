@@ -14,7 +14,7 @@ nobody pays for more track than the job needs. He doesn't trust a shipment witho
 switch without someone signing for it.
 
 Yardmaster does the same for your AI coding agents. It reads your past chats, works out which **kind of work** each one
-was and the **cheapest model that would still have done it right**, then writes the model-routing config for your
+was and the **weakest model that would still have done it right**, then writes the model-routing config for your
 harness, after you approve the diff.
 
 > **Status:** v1.0.0 is built and tested, but not yet released. Manual acceptance on real history in each harness, and
@@ -24,7 +24,7 @@ harness, after you approve the diff.
 
 | | By hand | With Yardmaster |
 |---|---|---|
-| 1. See what you spent | Export each harness's chats, add up credits and tokens | `/yardmaster ledger`: spend per harness and model, no AI call |
+| 1. See what it used | Export each harness's chats, add up credits and tokens | `/yardmaster ledger`: tokens and credits per harness, model and strength, no AI call |
 | 2. Decide what needed which model | Read the chats yourself, or paste them into a model and trust the answer | `/yardmaster`: secrets are redacted, then the model you already use judges each chat |
 | 3. Set up the routing | Hand-write YAML, TOML and Markdown for each tool | A diff you approve; one marked block per file; `/yardmaster undo` restores it |
 

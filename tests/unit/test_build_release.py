@@ -20,7 +20,7 @@ def test_contents_are_the_skill_and_nothing_else(tmp_path):
     with zipfile.ZipFile(z) as zf:
         names = zf.namelist()
         assert names == sorted(names)
-        assert {"yardmaster/SKILL.md", "yardmaster/pricing.json", "yardmaster/LICENSE", "yardmaster/scripts/yardmaster.py",
+        assert {"yardmaster/SKILL.md", "yardmaster/scripts/yardmaster/models.json", "yardmaster/LICENSE", "yardmaster/scripts/yardmaster.py",
                 "yardmaster/scripts/yardmaster/cli.py"} <= set(names)
         assert not [n for n in names if "__pycache__" in n or n.endswith(".pyc") or n.startswith(("tests", "docs", ".git", "reference"))]
         assert all(i.date_time == (1980, 1, 1, 0, 0, 0) for i in zf.infolist())  # no build-time timestamps

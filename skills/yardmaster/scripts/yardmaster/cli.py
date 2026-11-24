@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import re
 import shutil
 import sys
 from collections import Counter
@@ -11,12 +12,12 @@ from pathlib import Path
 
 from . import __version__, paths
 from .batch import make_batches, write_batches
+from .catalog import Catalog, default_catalog
 from .collectors import COLLECTORS, CollectorContext, in_project
 from .detect import detect_harness
 from .doctor import doctor, render_doctor
 from .export_md import export_md
 from .ledger import ledger, render_ledger
-from .pricing import Pricing, default_pricing
 from .route import RouteError, apply, dry_run, undo
 from .safe_io import MAX_JSON, load_json, make_private_dir, read_text
 from .schema import ValidationError, load_manifest_ids, validate_plan, validate_verdicts
@@ -24,7 +25,7 @@ from .settings import load_settings
 from .timeutil import resolve_range, to_utc_bounds
 from .writers import WRITERS
 
-GATE = 0.10  # refuse to analyse if the analysis would cost more than 10% of the period's spend
+GATE = 0.10  # refuse to judge if the judging would use more than 10% of the fresh tokens spent in the period
 VERDICT_TOKENS, OVERHEAD_TOKENS = 150, 1500  # per chat output / per batch protocol prompt
 
 
@@ -40,6 +41,8 @@ def _common() -> argparse.ArgumentParser:
     p.add_argument("--project", nargs="?", const=os.getcwd(), metavar="DIR", help="only chats of this project (default: cwd)")
     p.add_argument("--exclude-workspace", action="append", default=[], metavar="DIR")
     p.add_argument("--redact-pii", action="store_true", help="also redact emails, IPs and home paths")
+    p.add_argument("--include-claude-mem", action="store_true",
+                   help="also use Claude-Mem's own observer sessions (left out by default)")
     return p
 
 
@@ -51,11 +54,11 @@ def _build_parser() -> argparse.ArgumentParser:
     s.add_argument("--yes-expensive", action="store_true")
     s.add_argument("--out", help="directory for the batches (default: a private temp dir)")
     s.add_argument("--batch-tokens", type=int, default=60_000)
-    s.add_argument("--analysis-model", metavar="[HARNESS:]MODEL", help="model used to price the analysis")
+    s.add_argument("--analysis-model", metavar="[HARNESS:]MODEL", help="the model that will judge the chats (shown only)")
     pv = sub.add_parser("preview", help="print batch N exactly as it would be sent")
     pv.add_argument("n", type=int)
     sub.add_parser("clean", help="delete the survey directory")
-    sub.add_parser("ledger", parents=[_common()], help="spend per harness and model (no model call)")
+    sub.add_parser("ledger", parents=[_common()], help="tokens and credits per harness, model and strength (no model call)")
     sub.add_parser("doctor", help="what Yardmaster can read and write here, and what is unverified")
     x = sub.add_parser("export-md", parents=[_common()], help="write a redacted Markdown archive of the range")
     x.add_argument("--out", default=".", help="folder for the .md file (default: cwd)")
@@ -80,8 +83,8 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 # ------------------------------------------------------------------ shared steps
-def _pricing() -> Pricing:
-    return default_pricing(os.environ, sys.platform)
+def _catalog() -> Catalog:
+    return default_catalog()
 
 
 def _harnesses(args, settings) -> list[str]:
@@ -102,6 +105,13 @@ def _roots(args) -> dict[str, Path]:
     return out
 
 
+_CLAUDE_MEM = re.compile(r"(^|[\\/])\.claude-mem([\\/]|$)")  # Claude-Mem's own observer sessions live under .claude-mem
+
+
+def _is_claude_mem(c) -> bool:
+    return bool(c.workspace) and _CLAUDE_MEM.search(c.workspace) is not None
+
+
 def _collect(args, harnesses: list[str]):
     r = resolve_range(current=args.current, last=args.last, date_from=args.date_from, date_to=args.date_to,
                       today=date.today())
@@ -116,6 +126,10 @@ def _collect(args, harnesses: list[str]):
             warnings.append(f"{h}: collector failed ({type(e).__name__})")
             found = []
         warnings += [f"{h}: {w}" for w in ctx.warnings]
+        mem = [c for c in found if _is_claude_mem(c)]
+        if mem and not args.include_claude_mem:
+            found = [c for c in found if not _is_claude_mem(c)]
+            warnings.append(f"{h}: {len(mem)} Claude-Mem observer session(s) left out (--include-claude-mem adds them)")
         found = [c for c in found if not any(c.workspace and in_project(c.workspace, Path(x)) for x in args.exclude_workspace)]
         per[h] = found
         chats += found
@@ -127,24 +141,15 @@ def _survey_pointer() -> Path:
     return paths.state_dir(os.environ, sys.platform) / "survey.json"
 
 
-def _analysis_cost(pricing: Pricing, args, harnesses: list[str], n_batches: int, tokens: int, n_chats: int):
-    harness, _, name = (args.analysis_model or "").rpartition(":") if args.analysis_model else ("", "", "")
+def _analysis_tokens(args, harnesses: list[str], n_batches: int, tokens: int, n_chats: int) -> tuple[int, int, str]:
+    """Fresh tokens the judging will read and write: the batches with their framing, and a short verdict per chat."""
+    harness, _, name = (args.analysis_model or "").rpartition(":")
     harness = harness or detect_harness(os.environ) or (harnesses[0] if harnesses else "claude-code")
-    model = pricing.get(harness, name) if name else None
-    if model is None:
-        heavy = [m for m in pricing.models(harness) if m.tier == "heavy"]
-        model = max(heavy, key=lambda m: m.sort_key) if heavy else None
-    if model is None:
-        return 0.0, f"{harness}:unknown"
-    if model.input is not None:
-        cost = model.unit_cost(tokens + OVERHEAD_TOKENS * n_batches, VERDICT_TOKENS * n_chats + 600, 0)
-    else:
-        cost = model.multiplier * (n_batches + 1) * 0.01  # credits per request x requests x $0.01
-    return cost, f"{harness}:{model.id}"
+    return tokens + OVERHEAD_TOKENS * n_batches, VERDICT_TOKENS * n_chats + 600, f"{harness}:{name or 'this session'}"
 
 
 def _cmd_survey(args) -> int:
-    settings, pricing = load_settings(os.environ, sys.platform), _pricing()
+    settings = load_settings(os.environ, sys.platform)
     r, per, chats, warnings = _collect(args, _harnesses(args, settings))
     print(f"Range: {r.start} .. {r.end} (local time, inclusive)")
     for h, found in per.items():
@@ -160,16 +165,16 @@ def _cmd_survey(args) -> int:
     tokens = sum(b.est_tokens for b in batches)
     print(f"Redacted before sending: {sum(counts.values())}" + (f" ({', '.join(f'{k} {v}' for k, v in counts.most_common())})" if counts else ""))
     print(f"Batches: {len(batches)} (~{tokens:,} tokens)")
-    spend = ledger(chats, pricing)["total_est_usd"]
-    cost, via = _analysis_cost(pricing, args, list(per), len(batches), tokens, len(chats))
-    print(f"Spend in range: ${spend:,.2f} (estimated) | analysis: ~${cost:,.4f} via {via} (estimated)")
-    if not pricing.verified:
-        print("  note: pricing.json is UNVERIFIED (estimated prices); check docs/wiki/Pricing.md")
+    spent = ledger(chats, _catalog())["fresh_tokens"]
+    read, wrote, via = _analysis_tokens(args, list(per), len(batches), tokens, len(chats))
+    judging = read + wrote
+    print(f"Fresh tokens spent in range: {spent:,} (input + output) | judging: ~{judging:,} tokens via {via}")
     if len(batches) > settings.max_batches:
         print(f"Too many batches: {len(batches)} exceed max_batches ({settings.max_batches}). Narrow the range, harnesses or workspaces.")
         return 4
-    if spend > 0 and cost > GATE * spend and not args.yes_expensive:
-        print(f"The analysis would cost ~${cost:,.4f}, more than {GATE:.0%} of the ${spend:,.2f} spent. Re-run with --yes-expensive to continue.")
+    if spent > 0 and judging > GATE * spent and not args.yes_expensive:
+        print(f"Judging would use ~{judging:,} tokens, more than {GATE:.0%} of the {spent:,} fresh tokens spent. "
+              "Re-run with --yes-expensive to continue.")
         return 3
     _cmd_clean(None)  # a new survey replaces the previous one; never leave old chat data behind
     out = Path(args.out) if args.out else make_private_dir()
@@ -224,7 +229,7 @@ def _cmd_ledger(args) -> int:
     _, _, chats, warnings = _collect(args, _harnesses(args, settings))
     for w in warnings:
         print(f"warning: {w}")
-    print(render_ledger(ledger(chats, _pricing())), end="")
+    print(render_ledger(ledger(chats, _catalog())), end="")
     return 0
 
 
@@ -233,10 +238,10 @@ def _cmd_validate(args) -> int:
     if doc is None:
         print(f"error: cannot read {args.file} as JSON")
         return 2
-    pricing = _pricing()
+    catalog = _catalog()
     try:
         if args.kind == "plan":
-            plan = validate_plan(doc, pricing=pricing)
+            plan = validate_plan(doc, catalog=catalog)
             print(f"OK: plan with {len(plan.groups)} groups")
             return 0
         d = _survey_dir()
@@ -245,7 +250,7 @@ def _cmd_validate(args) -> int:
         if not isinstance(m, dict):
             print("error: no manifest; run `survey` first or pass --manifest")
             return 2
-        verdicts = validate_verdicts(doc, manifest_ids=load_manifest_ids(m), pricing=pricing)
+        verdicts = validate_verdicts(doc, manifest_ids=load_manifest_ids(m), catalog=catalog)
         print(f"OK: {len(verdicts)} verdicts")
         return 0
     except ValidationError as e:  # message holds a JSON pointer and a reason, never the offending value

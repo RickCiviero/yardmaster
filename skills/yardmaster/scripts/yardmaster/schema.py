@@ -8,7 +8,7 @@ import unicodedata
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from .pricing import TIERS, Pricing
+from .catalog import TIERS, Catalog
 
 SLUG = re.compile(r"^[a-z][a-z0-9-]{1,31}$")
 OUTCOMES = ("ok", "struggled", "failed")
@@ -24,7 +24,7 @@ _INSTRUCTION = re.compile(
     r"|javascript:|<\s*script|\beval\s*\(|\bexec\s*\("
 )
 VERDICT_KEYS = {"chat_id", "task_group", "task_summary", "model_used", "outcome", "sufficient_tier",
-                "cheapest_sufficient_model", "confidence", "reason"}
+                "weakest_sufficient_model", "confidence", "reason"}
 GROUP_KEYS = {"name", "tier", "when", "examples", "chats", "prefer"}
 PLAN_KEYS = {"version", "description", "groups"}
 
@@ -87,12 +87,12 @@ class Verdict:
     model_used: str
     outcome: str
     sufficient_tier: str
-    cheapest_sufficient_model: str
+    weakest_sufficient_model: str
     confidence: float
     reason: str
 
 
-def validate_verdicts(obj: object, *, manifest_ids: set[str], pricing: Pricing) -> list[Verdict]:
+def validate_verdicts(obj: object, *, manifest_ids: set[str], catalog: Catalog) -> list[Verdict]:
     if not isinstance(obj, list):
         raise ValidationError("must be a list of verdicts")
     out: list[Verdict] = []
@@ -109,9 +109,9 @@ def validate_verdicts(obj: object, *, manifest_ids: set[str], pricing: Pricing) 
         conf = d["confidence"]
         if isinstance(conf, bool) or not isinstance(conf, (int, float)) or not math.isfinite(conf) or not 0 <= conf <= 1:
             raise ValidationError("must be a number 0..1", f"{p}/confidence")
-        model = _text(d["cheapest_sufficient_model"], f"{p}/cheapest_sufficient_model", max_chars=64)
-        if pricing.get(cid.partition(":")[0], model) is None:
-            raise ValidationError("not a known model for this chat's harness", f"{p}/cheapest_sufficient_model")
+        model = _text(d["weakest_sufficient_model"], f"{p}/weakest_sufficient_model", max_chars=64)
+        if catalog.get(cid.partition(":")[0], model) is None:
+            raise ValidationError("not a known model for this chat's harness", f"{p}/weakest_sufficient_model")
         out.append(Verdict(
             cid, _slug(d["task_group"], f"{p}/task_group"),
             _text(d["task_summary"], f"{p}/task_summary", max_chars=200, max_words=25),
@@ -140,7 +140,7 @@ class Plan:
     groups: list[Group]
 
 
-def validate_plan(obj: object, *, pricing: Pricing) -> Plan:
+def validate_plan(obj: object, *, catalog: Catalog) -> Plan:
     d = _dict(obj, PLAN_KEYS, "")
     if d["version"] != 1 or isinstance(d["version"], bool):
         raise ValidationError("version must be 1", "/version")
@@ -167,7 +167,7 @@ def validate_plan(obj: object, *, pricing: Pricing) -> Plan:
             raise ValidationError("must be an object", f"{p}/prefer")
         prefer: dict[str, str] = {}
         for h, m in g["prefer"].items():
-            info = pricing.get(h, m) if isinstance(h, str) and isinstance(m, str) else None
+            info = catalog.get(h, m) if isinstance(h, str) and isinstance(m, str) else None
             if info is None or TIERS.index(info.tier) < TIERS.index(tier):
                 raise ValidationError("must name a known model of this tier or higher", f"{p}/prefer/{h}")
             prefer[h] = m

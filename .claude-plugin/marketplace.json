@@ -1,13 +1,13 @@
 {
   "name": "yardmaster",
   "owner": { "name": "RickCiviero" },
-  "description": "Yardmaster: route each kind of AI coding task to the cheapest model that does it well.",
+  "description": "Yardmaster: route each kind of AI coding task to the weakest model that does it well.",
   "plugins": [
     {
       "name": "yardmaster",
       "source": "./",
       "version": "1.0.0",
-      "description": "Right job. Right track. Lowest fare: routes each kind of AI coding task to the cheapest model that does it well."
+      "description": "Right job. Right track. Lowest fare: routes each kind of AI coding task to the weakest model that does it well."
     }
   ]
 }

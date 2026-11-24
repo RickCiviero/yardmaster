@@ -1,6 +1,6 @@
 ---
 mode: agent
-description: Route each kind of AI task to the cheapest model that does it well (Yardmaster)
+description: Route each kind of AI task to the weakest model that does it well (Yardmaster)
 ---
 
 Follow the instructions in the yardmaster skill's `SKILL.md` exactly, including its safety rules. Look for it at

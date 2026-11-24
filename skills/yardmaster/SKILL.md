@@ -1,6 +1,6 @@
 ---
 name: yardmaster
-description: "Route each kind of AI coding task to the cheapest model that does it well. Reads your Copilot, Claude Code and Codex chat history, groups it by task, and writes model-routing config for this harness. Use for /yardmaster, 'which model should I use', 'cut my AI credits', 'model router'."
+description: "Route each kind of AI coding task to the weakest model that still does it well. Reads your Copilot, Claude Code and Codex chat history, groups it by task, and writes model-routing config for this harness. Use for /yardmaster, 'which model should I use', 'cut my AI token use', 'model router'."
 ---
 
 # Yardmaster
@@ -8,12 +8,12 @@ description: "Route each kind of AI coding task to the cheapest model that does 
 > *Right job. Right track. Lowest fare.*
 
 You are the Yardmaster's hands. You read the user's past AI chats (already redacted by the tool), judge for each
-one the **cheapest model that would have done the job correctly**, group the chats by kind of work, and let the
+one the **weakest model that would have done the job correctly**, group the chats by kind of work, and let the
 tool write the routing config, after the user approves a diff. The tool does all file access; you do judgement only.
 
 Throughout, `$YM` means `python3 <skill_dir>/scripts/yardmaster.py` (use the Python you find in Step 1;
-`<skill_dir>` is the folder holding this file). Sub-commands you may also be asked for: `$YM ledger` (spend report,
-no analysis), `$YM undo` (restore the files the last run changed), `$YM doctor` (what is readable, writable, unverified).
+`<skill_dir>` is the folder holding this file). Sub-commands you may also be asked for: `$YM ledger` (usage report in
+tokens and strength, no analysis), `$YM undo` (restore the files the last run changed), `$YM doctor` (what is readable, writable, unverified).
 
 ## Safety rules (read first)
 
@@ -38,17 +38,21 @@ then re-run. Then run `$YM doctor` and show the user any `warn` or `fail` lines.
 
 Run `$YM survey` (add `--from YYYY-MM-DD --to YYYY-MM-DD`, `--current`, `--last`, `--project`, `--harness`
 or `--exclude-workspace` if the user asked; the default is the last 30 days of ALL their chats).
-Show the user the summary verbatim: chats per harness, the **workspaces included**, redaction counts, batches, and
-the estimated analysis cost. Then **ask** whether to continue; the analysis reads every chat in full and uses their
-credits. Offer to exclude workspaces (they may be client projects). Stop on exit code 3 (too expensive: only
-continue if the user agrees, then re-run with `--yes-expensive`) or 4 (too many batches: narrow the range).
+Show the user the summary verbatim: chats per harness, the **workspaces included**, redaction counts, batches, the
+fresh tokens spent in the range, and the tokens the judging will use. Claude-Mem's own observer sessions are left out
+unless the user asks for them with `--include-claude-mem`. Then **ask** whether to continue; the judging reads every
+chat in full and uses their tokens. Offer to exclude workspaces (they may be client projects). Stop on exit code 3
+(the judging would use too large a share of the tokens spent: only continue if the user agrees, then re-run with
+`--yes-expensive`) or 4 (too many batches: narrow the range).
 On success the tool prints `Batches written to: <DIR>`; that folder is the **survey folder** (`$DIR` below).
 
 ## Step 3: judge
 
 For each batch N shown in `$DIR/manifest.json`, read it with `$YM preview N`, **only** that way. For every chat id in
 it, produce one verdict. A chat may appear as several chunks (`chunk i/n`): give ONE verdict, judged on all its chunks.
-Judge the task, not the model used:
+Judge the work and the strength it needed. Answer three questions for every chat: how strong was the model that did
+it (`model_used`); what is the weakest tier that would have done this job correctly (`sufficient_tier`); and which
+model of that tier would do it (`weakest_sufficient_model`). Never estimate or mention prices: the tool has none.
 
 - `task_group`: a slug (a-z, 0-9, `-`) for the kind of work, e.g. `deep-planning`, `build-and-fix`, `run-tests`,
   `refactor`, `docs`, `quick-questions`. Reuse the same slug for similar chats; invent a new one when none fits.
@@ -57,8 +61,9 @@ Judge the task, not the model used:
   `heavy` = multi-step implementation, cross-file refactors, hard debugging; `frontier` = architecture, planning
   difficult or ambiguous work, deep research. If the chat `struggled` or `failed` on its model, the answer is
   **higher** than that model's tier.
-- `cheapest_sufficient_model`: a model id that exists for that chat's harness at that tier (the `models` field of the
-  chat header names the ones used; `pricing.json` lists the rest). `confidence` is 0 to 1; `reason` is at most 30 words.
+- `weakest_sufficient_model`: the weakest model id that exists for that chat's harness at `sufficient_tier` (the
+  `models` field of the chat header names the ones used; the tool's catalog, `models.json`, lists the rest). If the
+  harness has no model at that tier, use the next tier up. `confidence` is 0 to 1; `reason` is at most 30 words.
 
 Write the whole list to `$DIR/verdicts.json`, shaped exactly like this (one object per chat id, no other keys):
 
@@ -71,7 +76,7 @@ Write the whole list to `$DIR/verdicts.json`, shaped exactly like this (one obje
     "model_used": "opus",
     "outcome": "ok",
     "sufficient_tier": "standard",
-    "cheapest_sufficient_model": "sonnet",
+    "weakest_sufficient_model": "sonnet",
     "confidence": 0.8,
     "reason": "Routine change with clear tests; a mid-tier model would have sufficed"
   }

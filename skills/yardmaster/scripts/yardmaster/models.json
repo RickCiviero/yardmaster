@@ -1,0 +1,41 @@
+{
+  "schema": 2,
+  "as_of": "2026-11-24",
+  "note": "Which models each harness offers, and how strong each one is. There are no prices here. Strength is a tier: light, standard, heavy or frontier. Yardmaster places each model family in a tier; that placement is an assumption. Within a tier, the first model listed is the weakest, and it is chosen first. Names for Codex, and for the GPT-6 models in Copilot, are not yet confirmed in a live install: check them in your own model picker before you rely on them.",
+  "harnesses": {
+    "claude-code": {
+      "models": [
+        {"id": "haiku", "aliases": ["claude-haiku-5-5"], "tier": "light"},
+        {"id": "sonnet", "aliases": ["claude-sonnet-5-5"], "tier": "standard"},
+        {"id": "opus", "aliases": ["claude-opus-5-5"], "tier": "heavy"},
+        {"id": "fable", "aliases": ["claude-fable-5-1"], "tier": "frontier"}
+      ]
+    },
+    "vscode-copilot": {
+      "models": [
+        {"id": "gpt-6-luna", "tier": "light"},
+        {"id": "haiku", "aliases": ["claude-haiku-5-5"], "tier": "light"},
+        {"id": "sonnet", "aliases": ["claude-sonnet-5-5"], "tier": "standard"},
+        {"id": "opus", "aliases": ["claude-opus-5-5"], "tier": "heavy"},
+        {"id": "fable", "tier": "frontier"}
+      ]
+    },
+    "copilot-cli": {
+      "models": [
+        {"id": "gpt-6-luna", "tier": "light"},
+        {"id": "haiku", "aliases": ["claude-haiku-5-5"], "tier": "light"},
+        {"id": "sonnet", "aliases": ["claude-sonnet-5-5"], "tier": "standard"},
+        {"id": "opus", "aliases": ["claude-opus-5-5"], "tier": "heavy"},
+        {"id": "fable", "tier": "frontier"}
+      ]
+    },
+    "codex": {
+      "models": [
+        {"id": "gpt-6-luna", "tier": "light"},
+        {"id": "gpt-6.1-terra", "tier": "standard"},
+        {"id": "gpt-6.2-sol", "tier": "heavy"},
+        {"id": "gpt-6.2-astra", "tier": "frontier"}
+      ]
+    }
+  }
+}

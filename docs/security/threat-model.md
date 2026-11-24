@@ -24,7 +24,7 @@ written `file::test`. `tests/unit/test_docs_links.py` fails the build if a cited
 | (a) | **Malicious text inside old chats** | Prompt injection: the chat history is attacker-influenced data (a web page, an issue, a pasted file). |
 | (b) | **Malicious or corrupt history files** | Parser attacks: huge lines, deep nesting, bad encodings, symlinks, hostile SQLite. |
 | (c) | **Other local users or processes** | Read our temp files, race a write, swap a target for a symlink. |
-| (d) | **Supply chain** | A tampered release, dependency, workflow action or pricing file. |
+| (d) | **Supply chain** | A tampered release, dependency, workflow action or model catalog. |
 | (e) | **A confused or compromised model output** | The model returns paths, markup, other people's model ids or oversized JSON. |
 
 ## STRIDE tables
@@ -150,7 +150,7 @@ S = Spoofing, T = Tampering, R = Repudiation, I = Information disclosure, D = De
 | I | A user config widens what the admin policy narrowed. | S9 | `tests/unit/test_settings.py::test_policy_user_cannot_widen` |
 | I | The admin policy is silently ignored on a bad value. | S9 | `tests/unit/test_settings.py::test_invalid_values_fail_closed` |
 | I | A manifest or report carries chat text. | S8, S11 | `tests/unit/test_batch.py::test_manifest_has_no_text` |
-| I | The ledger shows chat text. | S11 | `tests/unit/test_ledger.py::test_total_and_render_has_no_chat_text` |
+| I | The ledger shows chat text. | S11 | `tests/unit/test_usage_ledger.py::test_the_report_never_contains_chat_text` |
 | I | An unreadable input is echoed back with its content. | S11 | `tests/e2e/test_validate_cli.py::test_validate_unreadable_inputs` |
 | E | The skill protocol lets `--apply` run before the user approves. | S7 | `tests/e2e/test_skill_protocol.py::test_apply_appears_only_in_the_apply_step` |
 | E | The skill skips the user gate before analysis or apply. | S7, S9 | `tests/e2e/test_skill_protocol.py::test_user_gate_before_analysis_and_before_apply` |

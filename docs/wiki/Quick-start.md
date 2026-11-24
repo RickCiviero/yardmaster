@@ -11,7 +11,7 @@
 
 | Say | Does |
 |---|---|
-| `/yardmaster ledger` | Spend per harness and model. No analysis, no AI call |
+| `/yardmaster ledger` | Tokens and credits per harness, model and strength. No analysis, no AI call |
 | `/yardmaster --last` | Survey the whole previous month |
 | `/yardmaster --from 2026-10-01 --to 2026-10-31` | A chosen range |
 | `/yardmaster --project` | Only chats of the current project |

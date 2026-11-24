@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from .pricing import TIERS, ModelInfo, Pricing
+from .catalog import TIERS, Catalog, ModelInfo
 from .schema import Plan, ValidationError
 
 
@@ -15,15 +15,15 @@ class ResolvedGroup:
     model: ModelInfo
 
 
-def resolve_plan(plan: Plan, harness: str, pricing: Pricing, deny: frozenset[str]) -> list[ResolvedGroup]:
+def resolve_plan(plan: Plan, harness: str, catalog: Catalog, deny: frozenset[str]) -> list[ResolvedGroup]:
     denied = {d.lower() for d in deny}
     by_model: dict[str, list[tuple[object, ModelInfo]]] = {}
     for g in plan.groups:
         model = None
-        if (pref := g.prefer.get(harness)) and (info := pricing.get(harness, pref)):
+        if (pref := g.prefer.get(harness)) and (info := catalog.get(harness, pref)):
             if not ({info.id.lower(), *(a.lower() for a in info.aliases)} & denied):
                 model = info
-        model = model or pricing.cheapest(harness, g.tier, deny)
+        model = model or catalog.choose(harness, g.tier, deny)
         if model is None:
             raise ValidationError(f"no model available for group {g.name!r} on {harness}")
         by_model.setdefault(model.id, []).append((g, model))
@@ -38,4 +38,4 @@ def resolve_plan(plan: Plan, harness: str, pricing: Pricing, deny: frozenset[str
         examples = [e for g in ordered for e in g.examples][:3]
         when = whens[0] if len(whens) == 1 else "; ".join(w.rstrip(".") for w in whens) + dot  # a lone group is left exactly as written
         out.append(ResolvedGroup(top.name, top.tier, when, examples, members[0][1]))
-    return sorted(out, key=lambda r: r.model.sort_key, reverse=True)
+    return sorted(out, key=lambda r: (TIERS.index(r.model.tier), r.model.id), reverse=True)

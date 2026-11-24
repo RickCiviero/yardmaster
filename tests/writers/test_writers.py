@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 import yaml
-from conftest import GOLDEN, PLAN, PRICING, apply, check_golden, rel
+from conftest import CATALOG, GOLDEN, PLAN, apply, check_golden, rel
 from yardmaster.blocks import BlockError
 from yardmaster.resolve import ResolvedGroup
 from yardmaster.writers import WRITERS, FileChange
@@ -86,7 +86,7 @@ def test_claude_code_subagents_and_claude_md(resolved, proj, env):
 def test_claude_code_main_session_model_from_env_gets_no_subagent(resolved, proj, env):
     out = rel(_run("claude-code", resolved, proj, env | {"ANTHROPIC_MODEL": "claude-opus-5-5"}))
     assert ".claude/agents/ym-build-and-fix.md" not in out  # the session already runs opus
-    assert ".claude/agents/ym-deep-planning.md" in out and _front(out[".claude/agents/ym-deep-planning.md"])["model"] == "claude-fable-5-1"
+    assert ".claude/agents/ym-deep-planning.md" in out and _front(out[".claude/agents/ym-deep-planning.md"])["model"] == "fable"
 
 
 def test_claude_code_global_targets_claude_config_dir(resolved, proj, env, tmp_path):
@@ -110,8 +110,8 @@ def test_codex_profile_files_and_agents_md(resolved, proj, env):
     codex_home = Path(env["HOME"]) / ".codex"
     profiles = [c for c in changes if c.path.name.endswith(".config.toml")]
     assert {c.path.name: tomllib.loads(c.new) for c in profiles} == {
-        "ym-deep-planning.config.toml": {"model": "gpt-5-pro"}, "ym-build-and-fix.config.toml": {"model": "gpt-5"},
-        "ym-quick-questions.config.toml": {"model": "gpt-5-mini"}}
+        "ym-deep-planning.config.toml": {"model": "gpt-6.2-astra"}, "ym-build-and-fix.config.toml": {"model": "gpt-6.2-sol"},
+        "ym-quick-questions.config.toml": {"model": "gpt-6-luna"}}
     assert all(c.path.parent == codex_home and c.root == codex_home for c in profiles)
     agents = next(c for c in changes if c.path.name == "AGENTS.md")
     assert agents.root == proj and "codex --profile ym-build-and-fix" in agents.new
@@ -166,7 +166,7 @@ HOSTILE = ['quote" and \\ backslash', "line1\nline2: x\n---\n- model: evil", "<!
 @pytest.mark.parametrize("bad", HOSTILE)
 @pytest.mark.parametrize("harness", ALL)
 def test_hostile_text_cannot_change_structure(harness, bad, proj, env):
-    model = PRICING.get(harness, "opus") or PRICING.models(harness)[0]
+    model = CATALOG.get(harness, "opus") or CATALOG.models(harness)[0]
     groups = [ResolvedGroup("build-and-fix", "heavy", bad, [bad], model)]
     changes = WRITERS[harness](PLAN, groups, proj, False, env)
     out = {c.path.relative_to(c.root).as_posix(): c.new for c in changes}

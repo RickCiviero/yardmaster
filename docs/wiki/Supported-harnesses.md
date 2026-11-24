@@ -1,11 +1,11 @@
 # Supported harnesses
 
-| Harness | History read from | Cost signal | Routing written to |
+| Harness | History read from | Usage signal | Routing written to |
 |---|---|---|---|
 | GitHub Copilot in VS Code (and Insiders) | `<User>/workspaceStorage/*/chatSessions`, transcripts, empty-window sessions | Copilot credits per request | `.agents/model-router/yardmaster.model-router.yml` |
 | GitHub Copilot CLI | `~/.copilot/session-state/*/events.jsonl` (`COPILOT_HOME`) | `totalNanoAiu` per session | `.github/agents/*.agent.md` and an `AGENTS.md` block |
-| Claude Code | `~/.claude/projects/*/*.jsonl` (`CLAUDE_CONFIG_DIR`) | token usage times price | `.claude/agents/ym-*.md` and a `CLAUDE.md` block |
-| Codex | `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl` (`CODEX_HOME`) | token counts times price | profile files `~/.codex/ym-<group>.config.toml` and an `AGENTS.md` block |
+| Claude Code | `~/.claude/projects/*/*.jsonl` (`CLAUDE_CONFIG_DIR`) | input, output and cache-read tokens | `.claude/agents/ym-*.md` and a `CLAUDE.md` block |
+| Codex | `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl` (`CODEX_HOME`) | input, output and cache-read tokens | profile files `~/.codex/ym-<group>.config.toml` and an `AGENTS.md` block |
 
 Every collector honours its tool's home variable and accepts `--path HARNESS=DIR`.
 
@@ -32,11 +32,11 @@ record the tool version and the outcome below.
 On this machine, `ledger` and `survey` ran over 17–24 November. Both were read-only: no chat was judged, and no config
 file was written.
 
-- Claude Code: 33 chats, 64 requests, $47.37 estimated spend, 15 batches.
+- Claude Code: 33 chats, 64 requests, about 4.27 million fresh tokens (input plus output), 15 batches.
 - Redaction: 172 matches (generic secret 84, high-entropy 78, connection string 6, private-key block 2, URL credentials 2).
 - Copilot CLI, VS Code Copilot and Codex: no chats in the range.
-- Finding: 31 of the 33 chats are claude-mem observer sessions, not coding work. The default survey includes them. Until
-  that changes, exclude them with `--exclude-workspace`. Whether to exclude them by default is an open decision.
+- Finding: 31 of the 33 chats were claude-mem observer sessions, not coding work. Claude-Mem's sessions are now left out
+  by default (`--include-claude-mem` adds them back).
 
 ### In-harness acceptance
 

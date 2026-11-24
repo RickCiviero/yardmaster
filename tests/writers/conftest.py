@@ -2,11 +2,11 @@ from pathlib import Path
 
 import pytest
 from yardmaster import writers
-from yardmaster.pricing import load_pricing
+from yardmaster.catalog import load_catalog
 from yardmaster.resolve import ResolvedGroup, resolve_plan
 from yardmaster.schema import Group, Plan
 
-PRICING = load_pricing(Path(__file__).resolve().parents[2] / "skills" / "yardmaster" / "pricing.json")
+CATALOG = load_catalog(Path(__file__).resolve().parents[2] / "skills" / "yardmaster" / "scripts" / "yardmaster" / "models.json")
 GOLDEN = Path(__file__).parent / "golden"
 
 PLAN = Plan(
@@ -31,7 +31,7 @@ def fixed_date(monkeypatch):
 @pytest.fixture
 def resolved():
     def _resolve(harness: str, deny=frozenset()) -> list[ResolvedGroup]:
-        return resolve_plan(PLAN, harness, PRICING, deny)
+        return resolve_plan(PLAN, harness, CATALOG, deny)
 
     return _resolve
 

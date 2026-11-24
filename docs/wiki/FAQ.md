@@ -3,8 +3,9 @@
 **Does it send my chats anywhere new?** No. Redacted batches go to the model your harness already uses, through that
 harness. Yardmaster has no network code.
 
-**What does the analysis cost?** `survey` shows an estimate next to what the same range cost you. Above 10% of that
-spend it asks for `--yes-expensive`. See [Pricing](Pricing).
+**What does the judging cost?** The survey shows the fresh tokens spent in the range (input plus output) and the tokens
+the judging will use. If the judging would use more than 10% of the tokens spent, it asks for `--yes-expensive`.
+See [Models](Models).
 
 **Can it miss a secret?** Redaction is best effort. A secret in an unusual format can pass. Use `preview N` or
 `--redact-pii`, and exclude sensitive workspaces.

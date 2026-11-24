@@ -3,8 +3,8 @@ import re
 from pathlib import Path
 
 import yaml
+from yardmaster.catalog import default_catalog
 from yardmaster.cli import _build_parser
-from yardmaster.pricing import default_pricing
 from yardmaster.schema import validate_plan, validate_verdicts
 
 SKILL = Path(__file__).resolve().parents[2] / "skills" / "yardmaster" / "SKILL.md"
@@ -45,12 +45,12 @@ def test_every_command_and_flag_named_in_the_skill_exists():
 
 
 def test_json_examples_validate_against_the_real_schemas():
-    pricing = default_pricing({"HOME": "/nonexistent"}, "linux")
+    catalog = default_catalog()
     blocks = dict(re.findall(r"```json (verdicts|plan)\n(.*?)\n```", TEXT, re.S))
     assert set(blocks) == {"verdicts", "plan"}
-    verdicts = validate_verdicts(json.loads(blocks["verdicts"]), manifest_ids={"claude-code:example"}, pricing=pricing)
+    verdicts = validate_verdicts(json.loads(blocks["verdicts"]), manifest_ids={"claude-code:example"}, catalog=catalog)
     assert len(verdicts) == 1
-    plan = validate_plan(json.loads(blocks["plan"]), pricing=pricing)
+    plan = validate_plan(json.loads(blocks["plan"]), catalog=catalog)
     assert len(plan.groups) >= 2
 
 

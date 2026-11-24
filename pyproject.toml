@@ -1,7 +1,7 @@
 [project]
 name = "yardmaster"
 version = "1.0.0"
-description = "Route each AI coding task to the cheapest model that does it well."
+description = "Route each AI coding task to the weakest model that does it well."
 requires-python = ">=3.11"
 dependencies = []
 license = { text = "MIT" }

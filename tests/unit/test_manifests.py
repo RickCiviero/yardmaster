@@ -56,7 +56,7 @@ def test_plugin_and_marketplace_identity():
 
 def test_skill_the_plugin_ships_exists():
     assert (ROOT / "skills" / "yardmaster" / "SKILL.md").is_file()
-    assert (ROOT / "skills" / "yardmaster" / "pricing.json").is_file()
+    assert (ROOT / "skills" / "yardmaster" / "scripts" / "yardmaster" / "models.json").is_file()
     assert (ROOT / "skills" / "yardmaster" / "scripts" / "yardmaster.py").is_file()
 
 
