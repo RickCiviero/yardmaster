@@ -9,6 +9,9 @@ license = { text = "MIT" }
 [project.optional-dependencies]
 dev = ["pytest", "hypothesis", "pyyaml", "tzdata", "ruff", "bandit", "pip-audit", "cyclonedx-bom"]
 
+[tool.setuptools]
+py-modules = []  # a skill folder, not an importable package; stops flat-layout auto-discovery
+
 [tool.pytest.ini_options]
 pythonpath = ["skills/yardmaster/scripts", "tools"]
 testpaths = ["tests"]

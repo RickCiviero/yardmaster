@@ -179,7 +179,7 @@ def _cmd_survey(args) -> int:
             return 2
         out.mkdir(parents=True, exist_ok=True)
         if os.name == "posix":
-            os.chmod(out, 0o700)
+            os.chmod(out, 0o700)  # nosem: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions (owner-only on purpose)
     write_batches(batches, out)
     ptr = _survey_pointer()
     ptr.parent.mkdir(parents=True, exist_ok=True)

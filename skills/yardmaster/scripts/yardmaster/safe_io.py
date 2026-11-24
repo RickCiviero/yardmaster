@@ -142,7 +142,7 @@ def make_private_dir() -> Path:
             if not any(_under(d, os.environ.get(k)) for k in ("LOCALAPPDATA", "USERPROFILE")):
                 raise UnsafePathError(f"temp dir {d} is outside the user profile")
         else:
-            os.chmod(d, 0o700)
+            os.chmod(d, 0o700)  # nosem: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions (owner-only on purpose)
     except BaseException:
         shutil.rmtree(d, ignore_errors=True)
         raise
