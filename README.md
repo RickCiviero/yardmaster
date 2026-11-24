@@ -4,6 +4,8 @@
 
 **Right job. Right track. Lowest fare.**
 
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/17065/badge)](https://www.bestpractices.dev/projects/17065)
+
 > *Thirty years in the switchyard. I never once sent a locomotive to haul a postcard.*
 
 ## Meet the Yardmaster
@@ -103,8 +105,9 @@ The zip is reproducible: `python tools/build_release.py X.Y.Z out/` from the tag
 ## Contributing
 
 Read [Contributing](docs/wiki/Contributing.md). Run `python -m pytest -q` and `ruff check .` before you open a pull
-request. Real chat text must never enter the repo: use `tools/make_fixture.py`. Report vulnerabilities privately, as
-described in [SECURITY.md](SECURITY.md).
+request. Report bugs and ideas in [GitHub Issues](https://github.com/RickCiviero/yardmaster/issues). Real chat text
+must never enter the repo: use `tools/make_fixture.py`. Report vulnerabilities privately, as described in
+[SECURITY.md](SECURITY.md).
 
 ## Licence
 

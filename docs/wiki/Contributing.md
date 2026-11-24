@@ -1,6 +1,6 @@
 # Contributing
 
-1. Fork, branch, and keep the change small.
+1. Fork, branch, and keep the change small. Open a pull request against `main`; it merges only when the required checks pass.
 2. Set up: `python -m pip install -e ".[dev]"`.
 3. Run `python -m pytest -q` and `ruff check .`. For security-sensitive changes also run `python -m pytest -m pentest -q` and `python -m pytest tests/fuzz -q`.
 4. Write the test first. A new collector follows one pattern: verify the format against the live tool, add an anonymised fixture, then the collector, the writer, pentest cases and the docs row.
