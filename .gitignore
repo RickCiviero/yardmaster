@@ -7,3 +7,4 @@ __pycache__/
 docs/superpowers/plans/
 .superpowers/
 .venv/
+.github/install-check/node_modules/

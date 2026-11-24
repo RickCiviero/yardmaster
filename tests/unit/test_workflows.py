@@ -95,7 +95,7 @@ def test_fuzz_workflow_is_nightly_with_a_heavy_example_count():
 
 def test_dependabot_covers_actions_and_pip():
     doc = yaml.safe_load((ROOT / ".github" / "dependabot.yml").read_text(encoding="utf-8"))
-    assert {u["package-ecosystem"] for u in doc["updates"]} == {"github-actions", "pip"} and doc["version"] == 2
+    assert {"github-actions", "pip", "npm"} <= {u["package-ecosystem"] for u in doc["updates"]} and doc["version"] == 2
 
 
 def test_semgrep_rules_are_well_formed_and_cover_the_bans():
