@@ -83,5 +83,7 @@ jobs:
           set -euo pipefail
           root=$(pwd)
           tools="$root/.github/install-check/node_modules/.bin"
-          "$tools/gemini" extensions install "https://github.com/$REPO" --consent --skip-settings
+          # The macOS runner image sets GIT_CONFIG_SYSTEM, which the Gemini CLI's git layer refuses to use.
+          # Unset it for this step only, so the install runs the way it does on a normal machine.
+          env -u GIT_CONFIG_SYSTEM "$tools/gemini" extensions install "https://github.com/$REPO" --consent --skip-settings
           bash "$root/.github/install-check/check.sh" "Gemini CLI extension" "$HOME/.gemini"
