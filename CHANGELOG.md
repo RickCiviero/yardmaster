@@ -5,6 +5,16 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 
 ## [Unreleased]
 
+### Fixed
+
+- Codex: profiles are now `~/.codex/ym-<group>.config.toml` files. Codex 0.134 and later ignore the `[profiles.*]` tables that 1.0.0 wrote. If you applied 1.0.0 Codex routing, run `/yardmaster undo`, or delete the `# yardmaster:begin` block from `config.toml`.
+
+### Added
+
+- `install-check` workflow: installs from each documented channel on fresh Windows, macOS and Linux runners, then runs `doctor`. The pinned tools use an integrity-hashed lock file.
+- `tools/verify_release.py`: checks a downloaded release file against `SHA256SUMS`.
+- The wiki sync can be started by hand.
+
 ## [1.0.0] - 2026-11-24
 
 - Collectors for GitHub Copilot in VS Code, GitHub Copilot CLI, Claude Code and Codex, read-only.
