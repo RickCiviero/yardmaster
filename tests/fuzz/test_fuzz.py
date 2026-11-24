@@ -90,8 +90,8 @@ def test_any_text_that_passes_validation_cannot_change_a_written_files_structure
                     assert doc["description"] == desc and doc["routes"][0]["when"] == when.strip() and len(doc["routes"]) == 2
                 elif c.new.startswith("---\n"):
                     assert set(yaml.safe_load(c.new.split("---\n")[1])) == {"name", "description", "model"}
-                elif c.path.name == "config.toml":
-                    assert set(tomllib.loads(c.new)["profiles"]) == {"ym-build-and-fix", "ym-quick-questions"}
+                elif c.path.name.endswith(".config.toml"):
+                    assert set(tomllib.loads(c.new)) == {"model"}
                 else:
                     ls = [ln.strip() for ln in c.new.splitlines()]
                     assert sum(ln.startswith("<!-- yardmaster:begin") for ln in ls) == sum(ln.startswith("<!-- yardmaster:end") for ln in ls) == 1

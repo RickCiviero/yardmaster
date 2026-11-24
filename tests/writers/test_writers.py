@@ -105,40 +105,38 @@ def test_claude_md_outside_block_untouched(resolved, proj, env):
 
 
 # ------------------------------------------------------------------ Codex
-def test_codex_profiles_and_agents_md(resolved, proj, env):
+def test_codex_profile_files_and_agents_md(resolved, proj, env):
     changes = _run("codex", resolved, proj, env)
-    cfg = next(c for c in changes if c.path.name == "config.toml")
-    assert cfg.path == Path(env["HOME"]) / ".codex" / "config.toml" and cfg.root == Path(env["HOME"]) / ".codex"
-    data = tomllib.loads(cfg.new)
-    assert data["profiles"] == {"ym-deep-planning": {"model": "gpt-5-pro"}, "ym-build-and-fix": {"model": "gpt-5"},
-                                "ym-quick-questions": {"model": "gpt-5-mini"}}
+    codex_home = Path(env["HOME"]) / ".codex"
+    profiles = [c for c in changes if c.path.name.endswith(".config.toml")]
+    assert {c.path.name: tomllib.loads(c.new) for c in profiles} == {
+        "ym-deep-planning.config.toml": {"model": "gpt-5-pro"}, "ym-build-and-fix.config.toml": {"model": "gpt-5"},
+        "ym-quick-questions.config.toml": {"model": "gpt-5-mini"}}
+    assert all(c.path.parent == codex_home and c.root == codex_home for c in profiles)
     agents = next(c for c in changes if c.path.name == "AGENTS.md")
     assert agents.root == proj and "codex --profile ym-build-and-fix" in agents.new
 
 
 def test_codex_global_puts_agents_md_beside_config(resolved, proj, env, tmp_path):
     changes = _run("codex", resolved, proj, env | {"CODEX_HOME": str(tmp_path / "cx")}, global_=True)
-    assert {c.root for c in changes} == {tmp_path / "cx"} and {c.path.name for c in changes} == {"config.toml", "AGENTS.md"}
+    assert {c.root for c in changes} == {tmp_path / "cx"} and len(changes) == 4 and "AGENTS.md" in {c.path.name for c in changes}
 
 
-def test_codex_conflicting_profile_aborts(resolved, proj, env):
-    cfg = Path(env["HOME"]) / ".codex" / "config.toml"
-    cfg.parent.mkdir(parents=True)
-    cfg.write_text('model = "gpt-5"\n[profiles.ym-build-and-fix]\nmodel = "mine"\n')
-    with pytest.raises(BlockError, match="ym-"):
+def test_codex_profile_file_we_did_not_write_aborts(resolved, proj, env):
+    p = Path(env["HOME"]) / ".codex" / "ym-build-and-fix.config.toml"
+    p.parent.mkdir(parents=True)
+    p.write_text('model = "mine"\n')
+    with pytest.raises(BlockError, match="ym-build-and-fix"):
         _run("codex", resolved, proj, env)
 
 
-def test_codex_keeps_user_toml_and_rejects_broken_toml(resolved, proj, env):
+def test_codex_never_touches_config_toml(resolved, proj, env):
     cfg = Path(env["HOME"]) / ".codex" / "config.toml"
     cfg.parent.mkdir(parents=True)
     cfg.write_text('model = "gpt-5"\n\n[profiles.mine]\nmodel = "x"\n')
-    new = next(c for c in _run("codex", resolved, proj, env) if c.path.name == "config.toml").new
-    data = tomllib.loads(new)
-    assert data["model"] == "gpt-5" and data["profiles"]["mine"] == {"model": "x"} and "ym-build-and-fix" in data["profiles"]
-    cfg.write_text("this is = = not toml [")
-    with pytest.raises(BlockError, match="TOML"):
-        _run("codex", resolved, proj, env)
+    assert not any(c.path.name == "config.toml" for c in _run("codex", resolved, proj, env))
+    cfg.write_text("this is = = not toml [")  # a broken user config.toml does not stop the profile files being written
+    assert len(_run("codex", resolved, proj, env)) == 4
 
 
 # ------------------------------------------------------------------ cross-cutting
@@ -181,7 +179,7 @@ def test_hostile_text_cannot_change_structure(harness, bad, proj, env):
             assert set(fm) == {"name", "description", "model"} and fm["model"] == model.id
             assert text.count("\n---\n") == 1  # front matter closes exactly once
         elif path.endswith("config.toml"):
-            assert list(tomllib.loads(text)["profiles"]) == ["ym-build-and-fix"]
+            assert set(tomllib.loads(text)) == {"model"} and tomllib.loads(text)["model"] == model.id
         else:  # AGENTS.md / CLAUDE.md block: exactly one begin and one end marker line, nothing forged
             lines = [ln.strip() for ln in text.splitlines()]
             assert sum(ln.startswith("<!-- yardmaster:begin") for ln in lines) == 1
