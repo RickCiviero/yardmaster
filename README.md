@@ -17,7 +17,7 @@ Yardmaster does the same for your AI coding agents. It reads your past chats, wo
 was and the **weakest model that would still have done it right**, then writes the model-routing config for your
 harness, after you approve the diff.
 
-> **Status:** v1.1.0 is released. Manual acceptance on real history in each harness is still to do; see the [changelog](CHANGELOG.md).
+> **Status:** v1.1.1 is released. Manual acceptance on real history in each harness is still to do; see the [changelog](CHANGELOG.md).
 
 ## What it does
 
@@ -52,7 +52,7 @@ npx skills add RickCiviero/yardmaster -a github-copilot
 Gemini CLI: `gemini extensions install https://github.com/RickCiviero/yardmaster`. Or copy `skills/yardmaster/` into
 your tool's skills folder by hand. You need Python 3.11 or newer; nothing else is installed.
 
-Command only, without a harness: `pipx install https://github.com/RickCiviero/yardmaster/releases/download/v1.1.0/yardmaster-1.1.0-py3-none-any.whl`, then `yardmaster ledger`.
+Command only, without a harness: `pipx install https://github.com/RickCiviero/yardmaster/releases/download/v1.1.1/yardmaster-1.1.1-py3-none-any.whl`, then `yardmaster ledger`.
 
 ## Quick start
 

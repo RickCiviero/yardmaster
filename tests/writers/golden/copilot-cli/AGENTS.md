@@ -1,7 +1,7 @@
 <!-- yardmaster:begin copilot-cli v1 -->
 ## Model routing (Yardmaster)
 
-Managed by Yardmaster 1.1.0 (2026-11-23). Edits inside this block are replaced the next time it runs; edit outside it freely.
+Managed by Yardmaster 1.1.1 (2026-11-23). Edits inside this block are replaced the next time it runs; edit outside it freely.
 
 Pick the matching custom agent for each kind of work:
 

@@ -5,7 +5,14 @@ All notable changes. The format follows [Keep a Changelog](https://keepachangelo
 
 ## [Unreleased]
 
-## [1.1.0] - 2026-11-24
+## [1.1.1] - 2026-11-24
+
+### Fixed
+
+- The 1.1.0 release run failed at its signing step: the installed cosign refuses `sign-blob` without `--bundle`. The tag `v1.1.0` is immutable, so it has no release assets. 1.1.1 is the first complete release with the 1.1.0 changes.
+- Release files are signed as Sigstore bundles (`*.sigstore.json`), the format cosign writes now.
+
+## [1.1.0] - 2026-11-24 (tag only: its release run failed at the signing step, see 1.1.1)
 
 ### Fixed
 
