@@ -14,13 +14,14 @@ from .batch import make_batches, write_batches
 from .collectors import COLLECTORS, CollectorContext, in_project
 from .detect import detect_harness
 from .ledger import ledger, render_ledger
-from .pricing import Pricing, load_pricing
+from .pricing import Pricing, default_pricing
+from .route import RouteError, apply, dry_run, undo
 from .safe_io import load_json, make_private_dir, read_text
 from .schema import ValidationError, load_manifest_ids, validate_plan, validate_verdicts
 from .settings import load_settings
 from .timeutil import resolve_range, to_utc_bounds
+from .writers import WRITERS
 
-PRICING_FILE = Path(__file__).resolve().parents[2] / "pricing.json"
 GATE = 0.10  # refuse to analyse if the analysis would cost more than 10% of the period's spend
 VERDICT_TOKENS, OVERHEAD_TOKENS = 150, 1500  # per chat output / per batch protocol prompt
 
@@ -53,6 +54,17 @@ def _build_parser() -> argparse.ArgumentParser:
     pv.add_argument("n", type=int)
     sub.add_parser("clean", help="delete the survey directory")
     sub.add_parser("ledger", parents=[_common()], help="spend per harness and model (no model call)")
+    r = sub.add_parser("route", help="preview (--dry-run) or write (--apply RUN_ID) the routing config")
+    r.add_argument("--target", help="harness id(s), comma-separated, or: all | auto")
+    r.add_argument("--plan", help="the validated plan.json")
+    r.add_argument("--global", dest="global_", action="store_true", help="write the harness's user-level config")
+    r.add_argument("--root", default=os.getcwd(), help="project root (default: cwd)")
+    mode = r.add_mutually_exclusive_group()
+    mode.add_argument("--dry-run", action="store_true")
+    mode.add_argument("--apply", metavar="RUN_ID")
+    r.add_argument("--code", help="the approval code printed with the diff")
+    u = sub.add_parser("undo", help="restore the files changed by the last (or given) applied run")
+    u.add_argument("run_id", nargs="?")
     v = sub.add_parser("validate", help="schema-check the model's verdicts.json or plan.json")
     v.add_argument("kind", choices=["verdicts", "plan"])
     v.add_argument("file")
@@ -62,7 +74,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
 # ------------------------------------------------------------------ shared steps
 def _pricing() -> Pricing:
-    return load_pricing(PRICING_FILE, paths.config_dir(os.environ, sys.platform) / "pricing.local.json")
+    return default_pricing(os.environ, sys.platform)
 
 
 def _harnesses(args, settings) -> list[str]:
@@ -234,7 +246,43 @@ def _cmd_validate(args) -> int:
         return 1
 
 
-COMMANDS = {"survey": _cmd_survey, "preview": _cmd_preview, "clean": _cmd_clean, "ledger": _cmd_ledger,
+def _targets(spec: str, settings) -> list[str]:
+    if spec == "auto":
+        found = detect_harness(os.environ)
+        if not found:
+            raise ValueError("--target auto cannot tell which harness is running; pass --target explicitly")
+        return [found]
+    if spec == "all":
+        return [t for t in WRITERS if settings.harnesses is None or t in settings.harnesses]
+    return [t.strip() for t in spec.split(",") if t.strip()]
+
+
+def _cmd_route(args) -> int:
+    if args.apply:
+        written = apply(args.apply, args.code, interactive=sys.stdin.isatty(), env=os.environ, platform=sys.platform)
+        print(f"Applied: {len(written)} file(s) written. Undo with: yardmaster undo {args.apply}")
+        for w in written:
+            print(f"  {w}")
+        return 0
+    if not args.dry_run:
+        print("error: give --dry-run (preview) or --apply RUN_ID")
+        return 2
+    if not args.plan or not args.target:
+        print("error: --dry-run needs --plan and --target")
+        return 2
+    settings = load_settings(os.environ, sys.platform)
+    dry_run(Path(args.plan), _targets(args.target, settings), Path(args.root), args.global_, os.environ, sys.platform,
+            settings=settings)
+    return 0
+
+
+def _cmd_undo(args) -> int:
+    restored = undo(args.run_id, os.environ, sys.platform)
+    print(f"Restored {len(restored)} file(s).")
+    return 0
+
+
+COMMANDS = {"route": _cmd_route, "undo": _cmd_undo, "survey": _cmd_survey, "preview": _cmd_preview, "clean": _cmd_clean, "ledger": _cmd_ledger,
             "validate": _cmd_validate}
 
 
@@ -249,6 +297,12 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     try:
         return COMMANDS[args.cmd](args)
+    except RouteError as e:
+        print(f"error: {e}")
+        return 1
+    except ValidationError as e:  # a JSON pointer and a reason, never the offending value
+        print(f"INVALID at {e}")
+        return 1
     except (ValueError, OSError) as e:
         print(f"error: {e}")
         return 2

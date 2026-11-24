@@ -40,7 +40,7 @@ def write(plan: Plan, groups: list[ResolvedGroup], root: Path, global_: bool, en
     agents_root = cx if global_ else root
     p = agents_root / "AGENTS.md"
     a_old = read_old(p)
-    changes.append(FileChange(p, agents_root, a_old, replace_block(a_old or "", body, style="md")))
+    changes.append(FileChange(p, agents_root, a_old, replace_block(a_old or "", body, style="md", tag="codex")))
     return changes
 
 

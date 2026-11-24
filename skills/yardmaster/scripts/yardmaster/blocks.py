@@ -1,21 +1,27 @@
-"""Edit only a marked block inside a shared file (CLAUDE.md, AGENTS.md, config.toml); never touch the rest."""
+"""Edit only a marked block inside a shared file (CLAUDE.md, AGENTS.md, config.toml); never touch the rest.
+
+A block may carry a TAG (e.g. the harness) so several tools can keep independent blocks in one shared file:
+`<!-- yardmaster:begin codex v1 -->` ... `<!-- yardmaster:end codex -->`. Untagged markers are the default.
+"""
 
 from typing import Literal
-
-MARKERS = {
-    "md": ("<!-- yardmaster:begin v1 -->", "<!-- yardmaster:end -->"),
-    "hash": ("# yardmaster:begin v1", "# yardmaster:end"),
-}
 
 
 class BlockError(Exception):
     pass
 
 
-def replace_block(text: str, body: str, *, style: Literal["md", "hash"]) -> str:
-    if style not in MARKERS:
+def markers(style: str, tag: str = "") -> tuple[str, str]:
+    if style not in ("md", "hash"):
         raise ValueError(f"unknown block style {style!r}")
-    begin, end = MARKERS[style]
+    sp = f" {tag}" if tag else ""
+    if style == "md":
+        return f"<!-- yardmaster:begin{sp} v1 -->", f"<!-- yardmaster:end{sp} -->"
+    return f"# yardmaster:begin{sp} v1", f"# yardmaster:end{sp}"
+
+
+def replace_block(text: str, body: str, *, style: Literal["md", "hash"], tag: str = "") -> str:
+    begin, end = markers(style, tag)
     if any(line.strip() in (begin, end) for line in body.splitlines()):
         raise BlockError("block body contains a marker line")
     lines = text.splitlines(keepends=True)  # only marker LINES count; a marker quoted in prose does not

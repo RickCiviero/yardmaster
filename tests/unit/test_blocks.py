@@ -69,3 +69,19 @@ def test_body_containing_a_marker_line_aborts():
 def test_unknown_style():
     with pytest.raises(ValueError):
         replace_block("x", "y", style="xml")
+
+
+def test_tagged_blocks_coexist_and_update_independently():
+    a = replace_block("# top\n", "codex body", style="md", tag="codex")
+    both = replace_block(a, "cli body", style="md", tag="copilot-cli")
+    assert "<!-- yardmaster:begin codex v1 -->\ncodex body\n<!-- yardmaster:end codex -->" in both
+    assert "<!-- yardmaster:begin copilot-cli v1 -->\ncli body\n<!-- yardmaster:end copilot-cli -->" in both
+    again = replace_block(both, "codex body 2", style="md", tag="codex")
+    assert "codex body 2" in again and "cli body" in again and "codex body\n" not in again
+    assert replace_block(again, "codex body 2", style="md", tag="codex") == again  # idempotent
+
+
+def test_tagged_and_untagged_blocks_are_different_blocks():
+    plain = replace_block("", "plain", style="md")
+    both = replace_block(plain, "tagged", style="md", tag="codex")
+    assert "plain" in both and "tagged" in both and both.count("yardmaster:begin") == 2

@@ -143,3 +143,11 @@ def load_pricing(path: Path, local: Path | None = None) -> Pricing:
             out.append(info)
         models[h] = out
     return Pricing(str(doc.get("as_of", "")), doc.get("verified") is True, units, models)
+
+
+def default_pricing(env, platform) -> Pricing:
+    """The shipped pricing.json plus the user's local price overrides (prices only)."""
+    from . import paths
+
+    shipped = Path(__file__).resolve().parents[2] / "pricing.json"
+    return load_pricing(shipped, paths.config_dir(env, platform) / "pricing.local.json")

@@ -184,7 +184,8 @@ def test_hostile_text_cannot_change_structure(harness, bad, proj, env):
             assert list(tomllib.loads(text)["profiles"]) == ["ym-build-and-fix"]
         else:  # AGENTS.md / CLAUDE.md block: exactly one begin and one end marker line, nothing forged
             lines = [ln.strip() for ln in text.splitlines()]
-            assert lines.count("<!-- yardmaster:begin v1 -->") == 1 and lines.count("<!-- yardmaster:end -->") == 1
+            assert sum(ln.startswith("<!-- yardmaster:begin") for ln in lines) == 1
+            assert sum(ln.startswith("<!-- yardmaster:end") for ln in lines) == 1
 
 
 def test_goldens_exist_for_every_harness():

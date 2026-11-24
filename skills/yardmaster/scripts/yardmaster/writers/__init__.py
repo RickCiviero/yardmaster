@@ -47,8 +47,21 @@ def home(env: Mapping[str, str]) -> Path:
     return Path(env.get("HOME") or env.get("USERPROFILE") or Path.home())
 
 
+_OVERLAY: dict[Path, str] = {}  # texts rendered earlier in the same run, so two targets can share one file
+
+
+def overlay_set(path: Path, text: str) -> None:
+    _OVERLAY[Path(path)] = text
+
+
+def overlay_clear() -> None:
+    _OVERLAY.clear()
+
+
 def read_old(path: Path) -> str | None:
     """Current text of a target, or None if absent. Symlinks and unreadable files raise (route reports it)."""
+    if path in _OVERLAY:
+        return _OVERLAY[path]
     if not path.exists() and not path.is_symlink():
         return None
     return read_text(path)

@@ -147,8 +147,8 @@ def sha256_file(path: Path) -> str | None:
         return None
 
 
-def atomic_write(path: Path, text: str, *, root: Path, expect_sha256: str | None) -> None:
-    """Replace `path` with `text` only if it still has the hash the user approved. Never follows links."""
+def check_target(path: Path, root: Path, expect_sha256: str | None) -> Path:
+    """Raise unless `path` is inside `root`, has no link on the way, and still has the approved hash."""
     abs_p, abs_root = Path(os.path.abspath(path)), Path(os.path.abspath(root))
     try:
         rel = abs_p.relative_to(abs_root)
@@ -162,6 +162,29 @@ def atomic_write(path: Path, text: str, *, root: Path, expect_sha256: str | None
     target = contained(abs_p, abs_root)
     if sha256_file(target) != expect_sha256:
         raise UnsafePathError(f"{target} changed since it was previewed")
+    return target
+
+
+def write_bytes_atomic(path: Path, data: bytes) -> None:
+    """Raw atomic replace (no EOL/BOM handling): used to restore a backup byte-for-byte."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=".ym-", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(data)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, path)
+    except BaseException:
+        with contextlib.suppress(OSError):
+            os.unlink(tmp)
+        raise
+
+
+def atomic_write(path: Path, text: str, *, root: Path, expect_sha256: str | None) -> None:
+    """Replace `path` with `text` only if it still has the hash the user approved. Never follows links."""
+    target = check_target(path, root, expect_sha256)
 
     bom, crlf = False, False
     if target.exists():

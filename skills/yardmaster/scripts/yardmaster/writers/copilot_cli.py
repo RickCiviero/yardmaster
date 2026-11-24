@@ -29,7 +29,7 @@ def write(plan: Plan, groups: list[ResolvedGroup], root: Path, global_: bool, en
                 f"Pick the matching custom agent for each kind of work:\n\n{items}")
         p = root / "AGENTS.md"
         old = read_old(p)
-        changes.append(FileChange(p, root, old, replace_block(old or "", body, style="md")))
+        changes.append(FileChange(p, root, old, replace_block(old or "", body, style="md", tag="copilot-cli")))
     return changes
 
 
