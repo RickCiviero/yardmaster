@@ -51,7 +51,7 @@ Turn on two-factor authentication on your GitHub account before you sign in, if 
 | Working build system | Met: `pyproject.toml` builds a wheel and a source distribution; `tools/build_release.py` builds the reproducible zip | `pyproject.toml`, `tools/build_release.py`, `.github/workflows/release.yml` |
 | Automated test suite | Met: over 1,400 tests, run on Windows, macOS and Linux with two Python versions | `.github/workflows/ci.yml` |
 | Tests for new functionality | Met: changes arrive with tests; for example `tests/unit/test_catalog.py` covers the catalog | `tests/` |
-| Warnings enabled | Met: ruff with the E, F, I, UP and B rule sets; bandit in CI at its strictest level | `pyproject.toml`, `.github/workflows/security.yml` |
+| Warnings enabled | Met: ruff with the E, F, I, UP and B rule sets; bandit in CI at medium severity and up (bandit -ll) | `pyproject.toml`, `.github/workflows/security.yml` |
 | Secure development knowledge | Your statement. The security design is documented | `docs/security/threat-model.md`, `docs/security/asvs-l2.md` |
 
 ### Security
@@ -66,11 +66,9 @@ Turn on two-factor authentication on your GitHub account before you sign in, if 
 | Dynamic analysis | Met: ClusterFuzzLite on every pull request; hypothesis property tests | `.github/workflows/cflite_pr.yml`, `.clusterfuzzlite/`, `tests/fuzz/` |
 | Signed releases | Met: each release file has a Sigstore bundle and a build attestation | `.github/workflows/release.yml`, `COMPLIANCE.md` |
 | Branch protection | Met: `main` needs 15 passing checks, linear history, signed commits, and no force pushes; `v*` tags cannot be moved or deleted | Repository settings; `docs/security/repo-hardening.md` |
-| Review of every change by a second person | **Likely Unmet.** This is a single-maintainer project, and the branch protection requires no approving review. Give the reason: every change goes through the required checks and signed commits. Check whether the level you target requires a second reviewer | `docs/security/repo-hardening.md` |
 
 ## Still open
 
-- The **Review by a second person** question is the one most likely to stay unmet. It needs a second maintainer to change.
 - The **Packaging** and **Contributors** parts of the OpenSSF Scorecard are separate from this badge. The Scorecard
   status is in `docs/security/asvs-l2.md`.
 - After you get the badge, add its markdown to the README. The repository has no badge yet.
