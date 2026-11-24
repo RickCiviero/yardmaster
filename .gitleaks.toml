@@ -1,0 +1,10 @@
+title = "yardmaster gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Test secrets are assembled at runtime in tests/secrets_corpus.py; no literal secret is committed."
+paths = [
+  '''tests/secrets_corpus\.py''',
+]
