@@ -8,6 +8,6 @@
 | Iron | `#2B2D31` | Text, the logo, headings |
 | Paper | `#F4F1EA` | Backgrounds |
 
-The logo (`logo.svg`) is a single colour (iron) on a transparent background: a semaphore arm over switch points. Its
-shapes are heavy on purpose so it still reads at 16 px. Headings are monospace. The signal colours are used only for
-their meaning, never for decoration.
+The logo is a railway switch: iron, with a signal-red branch, on a transparent background. `logo.svg` is for light
+screens, and `logo-dark.svg` (paper and signal red) is for dark screens. Headings are monospace. The signal colours are
+used only for their meaning, never for decoration.
