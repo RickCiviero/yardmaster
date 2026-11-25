@@ -1,4 +1,9 @@
-<p align="center"><img src="assets/logo.svg" alt="Yardmaster logo: a railway semaphore over switch points" width="96"></p>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
+    <img src="assets/logo.svg" alt="Yardmaster logo: a railway switch with a dark branch and a red branch" width="96">
+  </picture>
+</p>
 
 # Yardmaster
 
